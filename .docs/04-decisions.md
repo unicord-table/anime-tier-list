@@ -96,13 +96,21 @@ fallbacks, which is more code than the dependency.
 `@dnd-kit` gives pointer, touch, and keyboard sensors plus screen-reader
 announcements out of the box.
 
-Two settings that matter, both in `BoardEditor`:
+Three settings that matter, all in `BoardEditor`:
 
 - `PointerSensor` uses `activationConstraint: { distance: 6 }`, so a plain click
   stays a click. Without it, tapping a cover would start a drag instead of
   opening the detail modal.
 - `KeyboardSensor` is rebound to **Space** only (`keyboardCodes.start`). Its
   default also claims Enter, which would collide with Enter-to-open-details.
+- Collision detection is `pointerWithin` with a `rectIntersection` fallback,
+  **not** `closestCorners` or `closestCenter`. Distance-based detection scores
+  the dragged rect against every droppable, and a tier row is a wide rect while
+  a cover tile is a small one — so a tile rows away regularly beat the row the
+  cursor was inside, and only the topmost tier ever accepted a drop.
+  `pointerWithin` returns only what is under the pointer, nearest centre first:
+  the tile when there is one (which is what supplies the slot index), the row
+  otherwise. Keyboard drags have no pointer, hence the fallback.
 
 ---
 

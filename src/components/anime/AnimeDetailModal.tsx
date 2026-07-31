@@ -92,7 +92,10 @@ export function AnimeDetailModal({
             <div className="absolute inset-0 bg-[linear-gradient(transparent,var(--color-surface))]" />
           </div>
 
-          <div className="scrollbar -mt-[54px] flex-1 overflow-y-auto px-[22px] pb-[20px]">
+          {/* `relative` is load-bearing: the banner above is positioned, so a
+              static sibling paints *under* it and the negative margin buries
+              the top 54px of the cover behind the banner's gradient. */}
+          <div className="scrollbar relative -mt-[54px] flex-1 overflow-y-auto px-[22px] pb-[20px]">
             <div className="flex gap-[18px]">
               {media.cover ? (
                 // eslint-disable-next-line @next/next/no-img-element

@@ -6,9 +6,11 @@ import {
   DragOverlay,
   KeyboardSensor,
   PointerSensor,
-  closestCorners,
+  pointerWithin,
+  rectIntersection,
   useSensor,
   useSensors,
+  type CollisionDetection,
   type DragEndEvent,
   type DragStartEvent,
   type Over,
@@ -26,6 +28,21 @@ import type { TierListStore } from "@/lib/useTierList";
 import { TierRow } from "./TierRow";
 import { ToolRail } from "./ToolRail";
 import { UnrankedPool } from "./UnrankedPool";
+
+/**
+ * A tier row is a wide rect; a cover tile is a small one. Distance-based
+ * detection (closestCorners / closestCenter) compares the dragged rect against
+ * every droppable, so a stray tile several rows away routinely scores better
+ * than the row the cursor is actually inside — only the topmost tier ever won.
+ *
+ * pointerWithin returns just the droppables under the pointer, nearest centre
+ * first: the tile when you're over one (which is what supplies the slot index),
+ * the row itself otherwise. Keyboard drags have no pointer, hence the fallback.
+ */
+const collisionDetection: CollisionDetection = (args) => {
+  const hits = pointerWithin(args);
+  return hits.length ? hits : rectIntersection(args);
+};
 
 /** Where a drop landed: which region, and at which slot within it. */
 function resolveTarget(over: Over): { region: Region; index: number | null } | null {
@@ -100,7 +117,7 @@ export function BoardEditor({
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCorners}
+      collisionDetection={collisionDetection}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragCancel={() => setDragging(null)}
