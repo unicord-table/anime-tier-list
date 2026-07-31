@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Nocturne — design system tokens
+   Ported from the design project's `_ds/nocturne-<id>` styles.css.
+
+   Tailwind v4 emits every @theme variable into :root, so each token below
+   works BOTH as a utility class (bg-surface, text-accent-400, shadow-md)
+   and as a raw var() inside inline styles — which the tier colors and
+   color-mix() highlights still need.
+   ───────────────────────────────────────────────────────────────────────── */
+
+@theme {
+  --color-canvas: #161826;
+  --color-surface: #232532;
+  --color-ink: #e9e9ed;
+  --color-accent: #9184d9;
+  --color-accent-2: #a7a1db;
+
+  --color-divider: color-mix(in srgb, #e9e9ed 16%, transparent);
+  --color-muted: color-mix(in srgb, #e9e9ed 55%, transparent);
+
+  /* Tonal ramps — generated in OKLCH on one shared lightness scale, so the
+     same step of any role matches the others in visual value. */
+  --color-neutral-100: #f3f5fe;
+  --color-neutral-200: #e4e7f5;
+  --color-neutral-300: #cfd3e5;
+  --color-neutral-400: #b2b6ca;
+  --color-neutral-500: #9397ab;
+  --color-neutral-600: #75798c;
+  --color-neutral-700: #595d6c;
+  --color-neutral-800: #3f424d;
+  --color-neutral-900: #292b31;
+
+  --color-accent-100: #f5f4ff;
+  --color-accent-200: #e7e5fe;
+  --color-accent-300: #d2cefd;
+  --color-accent-400: #b5abfc;
+  --color-accent-500: #968ae0;
+  --color-accent-600: #796cbf;
+  --color-accent-700: #5d5294;
+  --color-accent-800: #423a6a;
+  --color-accent-900: #2b2741;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+
+  --shadow-sm: 0 0 0 1px #3f424d;
+  --shadow-md: 0 0 0 1px #595d6c, 0 6px 18px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 0 0 1px #9397ab, 0 16px 40px rgba(0, 0, 0, 0.65);
+
+  /* Cover art sits on a dark scrim in every size — these are the two
+     literals the design repeats on card labels. */
+  --color-card-ink: #f3f5fe;
+  --color-card-ink-dim: #c8ccdb;
+}
+
+@theme inline {
+  --font-heading: var(--font-inter), system-ui, sans-serif;
+  --font-body: var(--font-inter), system-ui, sans-serif;
+}
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  :focus {
+    outline: none;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+  }
+}
+
+@layer components {
+  /* Scrollbars — ::-webkit-scrollbar has no utility equivalent, so it stays
+     as a class. Applied through the <Scroll> component. */
+  .scrollbar::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  .scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar::-webkit-scrollbar-thumb {
+    background: var(--color-neutral-800);
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  .scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--color-neutral-700);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+}
+
+/* Drop-target highlight. Kept as a class because the tier rows, the pool and
+   the catalog all share it, and it needs !important to beat the per-tier
+   inline background. */
+.drop-active {
+  outline: 2px dashed var(--color-accent);
+  outline-offset: -4px;
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent) !important;
+}
