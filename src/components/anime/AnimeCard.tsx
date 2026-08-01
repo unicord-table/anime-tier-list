@@ -4,6 +4,7 @@ import type { CSSProperties, HTMLAttributes, Ref } from "react";
 import { Check } from "@phosphor-icons/react";
 import { Text } from "@/components/ui/Text";
 import { cn } from "@/lib/cn";
+import { retryCover } from "@/lib/img";
 import type { Media } from "@/lib/types";
 
 /**
@@ -85,9 +86,10 @@ export function AnimeCard({
           alt=""
           loading="lazy"
           draggable={false}
-          // AniList's CDN reflects Origin, so an anonymous request keeps the
-          // canvas untainted — without this the PNG export fails.
+          // Every <img> hitting AniList's CDN must use the same request mode —
+          // see retryCover for why, and for what a failed load falls back to.
           crossOrigin="anonymous"
+          onError={retryCover}
           className="h-full w-full object-cover"
         />
       ) : null}
