@@ -9,6 +9,7 @@ import { ExternalLink } from "@/components/ui/ExternalLink";
 import { Tag } from "@/components/ui/Tag";
 import { Text } from "@/components/ui/Text";
 import { fetchAnimeDetail } from "@/lib/anilist";
+import { retryCover } from "@/lib/img";
 import type { Media, MediaDetail } from "@/lib/types";
 
 /** FINISHED -> Finished, NOT_YET_RELEASED -> Not yet released. */
@@ -86,6 +87,8 @@ export function AnimeDetailModal({
               <img
                 src={detail.banner}
                 alt=""
+                crossOrigin="anonymous"
+                onError={retryCover}
                 className="h-full w-full object-cover"
               />
             ) : null}
@@ -102,6 +105,11 @@ export function AnimeDetailModal({
                 <img
                   src={detail?.cover || media.cover}
                   alt=""
+                  // Same CORS mode as AnimeCard — see retryCover. The detail
+                  // query asks for extraLarge, which the CDN does not always
+                  // have, so a failure falls back to the card's cover URL.
+                  crossOrigin="anonymous"
+                  onError={(e) => retryCover(e, media.cover)}
                   className="h-[168px] w-[118px] flex-none rounded-md object-cover shadow-md"
                 />
               ) : null}
