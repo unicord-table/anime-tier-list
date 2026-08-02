@@ -4,6 +4,7 @@ import { useState, type RefObject } from "react";
 import {
   DndContext,
   DragOverlay,
+  closestCenter,
   KeyboardSensor,
   PointerSensor,
   pointerWithin,
@@ -15,12 +16,16 @@ import {
   type DragStartEvent,
   type Over,
 } from "@dnd-kit/core";
-import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { Plus } from "@phosphor-icons/react";
 
 import { AnimeCard } from "@/components/anime/AnimeCard";
 import { CatalogPanel } from "@/components/catalog/CatalogPanel";
-import type { DragData } from "@/components/dnd/DragParts";
+import { tierSortId, type DragData } from "@/components/dnd/DragParts";
 import { Text } from "@/components/ui/Text";
 import type { Media, Region } from "@/lib/types";
 import type { TierListStore } from "@/lib/useTierList";
@@ -40,8 +45,22 @@ import { UnrankedPool } from "./UnrankedPool";
  * the row itself otherwise. Keyboard drags have no pointer, hence the fallback.
  */
 const collisionDetection: CollisionDetection = (args) => {
-  const hits = pointerWithin(args);
-  return hits.length ? hits : rectIntersection(args);
+  const isTier = (data: unknown) => (data as DragData | undefined)?.type === "tier";
+
+  // A tier only ever drops onto another tier, and a tile never onto a tier
+  // handle. Splitting the candidate set keeps the two sortable axes from
+  // scoring against each other — a dragged tier rect overlaps every card
+  // droppable it passes over, which otherwise wins the collision.
+  const containers = args.droppableContainers.filter(
+    (c) => isTier(c.data.current) === isTier(args.active.data.current),
+  );
+  if (isTier(args.active.data.current)) {
+    return closestCenter({ ...args, droppableContainers: containers });
+  }
+
+  const scoped = { ...args, droppableContainers: containers };
+  const hits = pointerWithin(scoped);
+  return hits.length ? hits : rectIntersection(scoped);
 };
 
 /** Where a drop landed: which region, and at which slot within it. */
@@ -93,9 +112,14 @@ export function BoardEditor({
     }),
   );
 
+  function moveTierBy(id: string, delta: number) {
+    const target = save.tiers[save.tiers.findIndex((t) => t.id === id) + delta];
+    if (target) store.reorderTiers(id, target.id);
+  }
+
   function handleDragStart({ active }: DragStartEvent) {
     const data = active.data.current as DragData | undefined;
-    if (!data) return;
+    if (!data || data.type === "tier") return;
     setDragging(data.type === "catalog" ? data.media : (save.media[data.key] ?? null));
   }
 
@@ -103,9 +127,17 @@ export function BoardEditor({
     setDragging(null);
     if (!over) return;
 
-    const target = resolveTarget(over);
     const data = active.data.current as DragData | undefined;
-    if (!target || !data) return;
+    if (!data) return;
+
+    if (data.type === "tier") {
+      const overData = over.data.current as DragData | undefined;
+      if (overData?.type === "tier") store.reorderTiers(data.id, overData.id);
+      return;
+    }
+
+    const target = resolveTarget(over);
+    if (!target) return;
 
     if (data.type === "catalog") {
       store.addMedia(data.media, target.region, target.index);
@@ -150,17 +182,23 @@ export function BoardEditor({
               {/* Ref sits on the inner wrapper so the PNG captures every tier,
                   not just the scrolled-into-view slice. */}
               <div ref={boardRef} className="bg-canvas">
-                {save.tiers.map((tier) => (
-                  <TierRow
-                    key={tier.id}
-                    tier={tier}
-                    media={save.media}
-                    onRename={store.renameTier}
-                    onRecolor={store.recolorTier}
-                    onRemove={store.removeTier}
-                    onOpenCard={onOpenCard}
-                  />
-                ))}
+                <SortableContext
+                  items={save.tiers.map((t) => tierSortId(t.id))}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {save.tiers.map((tier) => (
+                    <TierRow
+                      key={tier.id}
+                      tier={tier}
+                      media={save.media}
+                      onRename={store.renameTier}
+                      onRecolor={store.recolorTier}
+                      onRemove={store.removeTier}
+                      onMove={moveTierBy}
+                      onOpenCard={onOpenCard}
+                    />
+                  ))}
+                </SortableContext>
               </div>
 
               <button

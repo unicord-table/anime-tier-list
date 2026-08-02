@@ -21,7 +21,11 @@ import type { Media, Region } from "@/lib/types";
 
 export type DragData =
   | { type: "catalog"; media: Media }
-  | { type: "board"; key: string; region: Region };
+  | { type: "board"; key: string; region: Region }
+  | { type: "tier"; id: string };
+
+/** Sortable id for a tier row. Namespaced so it can't collide with a MediaKey. */
+export const tierSortId = (id: string) => `tiersort:${id}`;
 
 export type DropData = { type: "region"; region: Region };
 
