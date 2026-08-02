@@ -162,6 +162,16 @@ export function removeTier(save: SaveFile, id: string): SaveFile {
   });
 }
 
+/** Moves tier `id` to the slot currently held by `beforeId`. */
+export function reorderTiers(save: SaveFile, id: string, beforeId: string): SaveFile {
+  const from = save.tiers.findIndex((t) => t.id === id);
+  const to = save.tiers.findIndex((t) => t.id === beforeId);
+  if (from < 0 || to < 0 || from === to) return save;
+  const tiers = [...save.tiers];
+  tiers.splice(to, 0, tiers.splice(from, 1)[0]);
+  return touch({ ...save, tiers });
+}
+
 function patchTier(save: SaveFile, id: string, patch: Partial<Tier>): SaveFile {
   return touch({
     ...save,

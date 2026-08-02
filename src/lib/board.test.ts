@@ -9,6 +9,7 @@ import {
   rankedCount,
   removeItem,
   removeTier,
+  reorderTiers,
 } from "./board.ts";
 import type { Media, SaveFile } from "./types.ts";
 
@@ -94,4 +95,25 @@ test("removing a title drops its media record too", () => {
   const s = removeItem(fixture(), "al:1");
   assert.equal("al:1" in s.media, false);
   assert.deepEqual(tier(s, "t1"), ["al:2", "al:3"]);
+});
+
+const ids = (s: SaveFile) => s.tiers.map((t) => t.id).join("");
+
+test("reorderTiers moves a tier down to the target's slot", () => {
+  assert.equal(ids(reorderTiers(fixture(), "t1", "t3")), "t2t3t1t4t5t6");
+});
+
+test("reorderTiers moves a tier up to the target's slot", () => {
+  assert.equal(ids(reorderTiers(fixture(), "t5", "t2")), "t1t5t2t3t4t6");
+});
+
+test("reorderTiers keeps each tier's items with it", () => {
+  const next = reorderTiers(fixture(), "t1", "t3");
+  assert.deepEqual(tier(next, "t1"), ["al:1", "al:2", "al:3"]);
+});
+
+test("reorderTiers ignores unknown ids and no-op moves", () => {
+  const save = fixture();
+  assert.equal(reorderTiers(save, "t1", "nope"), save);
+  assert.equal(reorderTiers(save, "t1", "t1"), save);
 });

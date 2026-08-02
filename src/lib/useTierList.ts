@@ -70,6 +70,8 @@ export function useTierList() {
         commit((s) => board.recolorTier(s, id, color)),
       addTier: () => commit((s) => board.addTier(s, nanoid(6))),
       removeTier: (id: string) => commit((s) => board.removeTier(s, id)),
+      reorderTiers: (id: string, beforeId: string) =>
+        commit((s) => board.reorderTiers(s, id, beforeId)),
 
       moveItem: (key: MediaKey, region: Region, index: number | null) =>
         commit((s) => board.moveItem(s, key, region, index)),
