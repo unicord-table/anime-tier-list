@@ -13,6 +13,8 @@ import type { ElementType, ComponentPropsWithoutRef, ReactNode } from "react";
 const VARIANTS = {
   /** Public tier-list title. */
   display: "font-heading text-[34px] font-medium leading-[1.12] tracking-[-0.015em]",
+  /** Nocturne h3 — the heading inside a modal. */
+  dialogTitle: "font-heading text-[23px] font-medium leading-[1.12] tracking-[-0.015em]",
   /** Board title, card titles. */
   title: "font-heading text-[17px] font-semibold leading-[1.2] tracking-[-0.01em]",
   /** Editable tier letter. */

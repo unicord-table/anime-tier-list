@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping out. Read [`.docs/04-decisions.md`](.docs/04-decisions.md)
+Thanks for helping out. Read [`.docs/decisions.md`](.docs/decisions.md)
 before adding anything — it lists what was deliberately skipped and what would
 have to be true to un-skip it.
 

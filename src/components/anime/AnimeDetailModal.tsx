@@ -78,7 +78,13 @@ export function AnimeDetailModal({
     : [];
 
   return (
-    <Modal open={media !== null} onClose={onClose} label="Anime details">
+    <Modal
+      open={media !== null}
+      onClose={onClose}
+      label="Anime details"
+      // Sits over the banner art, so it needs its own scrim to stay legible.
+      closeClassName="bg-[rgba(11,12,20,.55)] text-neutral-300 hover:text-ink"
+    >
       {media ? (
         <>
           <div className="relative h-[132px] flex-none bg-neutral-900">

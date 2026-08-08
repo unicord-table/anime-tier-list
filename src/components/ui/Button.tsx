@@ -1,15 +1,29 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
-/** Nocturne `.btn` — primary / secondary / ghost. */
+/**
+ * Nocturne `.btn` — primary / secondary / ghost, plus `social`, the filled
+ * OAuth button from the sign-in modal.
+ *
+ * Each variant carries its own background, border colour and padding rather
+ * than overriding a shared default. `cn` is a plain joiner, so two competing
+ * `bg-*` / `border-*` / `px-*` classes get resolved by Tailwind's own
+ * ordering, not by which one is listed last — which is why the base used to
+ * set `border-transparent` and every variant's border silently lost to it.
+ */
+
+const PAD = "px-[10px] py-[5.6px]";
 
 const VARIANTS = {
   primary:
-    "text-accent border-accent hover:bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] active:bg-[color-mix(in_srgb,var(--color-accent)_22%,transparent)]",
+    PAD + " bg-transparent text-accent border-accent hover:bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] active:bg-[color-mix(in_srgb,var(--color-accent)_22%,transparent)]",
   secondary:
-    "text-ink border-divider hover:bg-[color-mix(in_srgb,var(--color-ink)_7%,transparent)] active:bg-[color-mix(in_srgb,var(--color-ink)_14%,transparent)]",
+    PAD + " bg-transparent text-ink border-divider hover:bg-[color-mix(in_srgb,var(--color-ink)_7%,transparent)] active:bg-[color-mix(in_srgb,var(--color-ink)_14%,transparent)]",
   ghost:
-    "text-accent border-transparent hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] active:bg-[color-mix(in_srgb,var(--color-accent)_18%,transparent)]",
+    PAD + " bg-transparent text-accent border-transparent hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] active:bg-[color-mix(in_srgb,var(--color-accent)_18%,transparent)]",
+  /** Taller than the rest — it is the primary affordance in the sign-in modal. */
+  social:
+    "px-[12px] py-[10px] bg-canvas text-ink border-divider hover:border-accent-700 hover:bg-[color-mix(in_srgb,var(--color-accent)_9%,var(--color-canvas))] active:bg-[color-mix(in_srgb,var(--color-accent)_16%,var(--color-canvas))]",
 } as const;
 
 export type ButtonVariant = keyof typeof VARIANTS;
@@ -33,8 +47,7 @@ export function Button({
       type={type}
       className={cn(
         "inline-flex cursor-pointer items-center justify-center gap-[6px]",
-        "rounded-md border border-transparent bg-transparent",
-        "px-[10px] py-[5.6px]",
+        "rounded-md border",
         "font-heading text-[14px] leading-[1.2] font-medium",
         "transition-colors disabled:cursor-not-allowed disabled:opacity-45",
         VARIANTS[variant],

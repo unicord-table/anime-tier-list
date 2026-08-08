@@ -4,9 +4,14 @@ Build, save, and share anime tier lists. Search the AniList catalog or import a
 public list by username, drag titles into tiers, click any cover for details, and
 export a save file or a PNG.
 
-**Status:** Phase 1 shipped — the editor works end to end, entirely client-side.
-Share links (Phase 2) and Google Drive sync (Phase 3) are not built yet.
-See [`.docs/01-roadmap.md`](.docs/01-roadmap.md).
+**Status:** the editor works end to end, entirely client-side, with optional
+Google/GitHub sign-in that currently gates nothing. Share links, non-anime
+topics, and the social layer are designed but not built — see
+[`.docs/product/roadmap.md`](.docs/product/roadmap.md).
+
+**Where this is going:** a social platform for tier lists on any topic —
+shareable by link, with profiles and a feed. See
+[`.docs/product/vision.md`](.docs/product/vision.md).
 
 ## What works today
 
@@ -20,6 +25,7 @@ See [`.docs/01-roadmap.md`](.docs/01-roadmap.md).
 - **Autosave** to localStorage, plus export/import of a `.json` save file
 - **Export PNG** of the whole board
 - **Preview** what the public page will look like
+- **Sign in** with Google or GitHub — optional, and it doesn't gate anything yet
 
 ## Getting started
 
@@ -31,6 +37,13 @@ npm install
 npm run dev
 ```
 
+That's the whole setup. Sign-in needs a Convex deployment on top, and without one
+the app simply hides the account UI — see [`.docs/architecture/auth.md`](.docs/architecture/auth.md).
+
+```bash
+npx convex dev
+```
+
 | Command | What it does |
 | --- | --- |
 | `npm run dev` | Dev server on http://localhost:3000 |
@@ -38,18 +51,22 @@ npm run dev
 | `npm test` | Board logic tests (Node's runner, no framework) |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run lint` | ESLint |
+| `npx convex dev` | Convex backend, watching `convex/` — only needed for sign-in |
 
 ## Stack
 
 Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 · dnd-kit ·
-Phosphor icons. No backend, no database, no accounts.
+Phosphor icons · Convex + Convex Auth for optional sign-in. The board itself
+still has no backend and no database — it lives in localStorage.
 
 ## Layout
 
 ```
+convex/           auth providers, schema, the `viewer` query (see .docs/architecture/auth.md)
 src/
   app/            route + Nocturne design tokens (globals.css)
   components/
+    auth/         AccountMenu — sign-in modal, avatar, sign-out
     ui/           Text, Button, IconButton, TextInput, Segmented,
                   Modal, Tag, Toast, ExternalLink
     anime/        AnimeCard, AnimeDetailModal
@@ -71,9 +88,15 @@ there, not in a component.
 
 ## Docs
 
+Full index: [`.docs/README.md`](.docs/README.md).
+
 | Doc | What's in it |
 | --- | --- |
-| [`.docs/01-roadmap.md`](.docs/01-roadmap.md) | Phases, what ships when |
-| [`.docs/02-data-model.md`](.docs/02-data-model.md) | Save file schema, planned DB schema, routes |
-| [`.docs/03-apis.md`](.docs/03-apis.md) | AniList / Jikan / MAL / Drive contracts, verified against the live APIs |
-| [`.docs/04-decisions.md`](.docs/04-decisions.md) | Why it's built this way, and what was deliberately skipped |
+| [`.docs/architecture/overview.md`](.docs/architecture/overview.md) | Start here — stack, shape, module map |
+| [`.docs/product/roadmap.md`](.docs/product/roadmap.md) | Phases, what ships when |
+| [`.docs/product/vision.md`](.docs/product/vision.md) | What the product is becoming |
+| [`.docs/architecture/data-model.md`](.docs/architecture/data-model.md) | Save file schema, its generalized v2, planned Convex schema |
+| [`.docs/reference/external-apis.md`](.docs/reference/external-apis.md) | AniList / Jikan / MAL contracts, verified against the live APIs |
+| [`.docs/decisions.md`](.docs/decisions.md) | Why it's built this way, and what was deliberately skipped |
+| [`.docs/architecture/auth.md`](.docs/architecture/auth.md) | Convex + OAuth setup, env vars, and the sign-in QA checklist |
+| [`.docs/contributing/adding-a-feature.md`](.docs/contributing/adding-a-feature.md) | Where things go, by layer |
