@@ -118,7 +118,7 @@ Ship Phases 1–3 first and see whether anyone asks.
 
 | Not building | Reconsider when |
 | --- | --- |
-| User accounts | Someone needs their lists on a new device without Drive |
+| ~~User accounts~~ | Built 2026-08-08 — optional Google/GitHub sign-in, see [06-auth.md](06-auth.md) and [04-decisions.md](04-decisions.md#d2) |
 | Comments / likes / feeds | Never, probably — that's a different product |
 | Custom image uploads | Never. Adds storage + moderation for near-zero gain |
 | Manga / games / movies | The whole app is source-agnostic already; it's a query change |

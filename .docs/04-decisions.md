@@ -28,17 +28,25 @@ calling MAL's ecosystem directly.
 
 ---
 
-## D2 — No accounts
+## D2 — Optional accounts, OAuth only ~~No accounts~~
 
-Publishing returns an edit token stored in localStorage. That's the whole auth
-system.
+**Superseded 2026-08-08.** The original call was no accounts at all: publishing
+returns an edit token stored in localStorage, and Phase 3's Drive sync solves
+"edit from a second device" as a side effect.
 
-Accounts would mean password storage or an OAuth provider, a sessions table,
-email verification, and account recovery — all to solve a problem ("edit from a
-second device") that Phase 3's Drive sync solves as a side effect.
+What actually changed the answer is that the objection was never to *accounts*,
+it was to what accounts used to cost: password storage, email verification, and
+account recovery. Convex Auth with Google and GitHub has none of those — there is
+no password to store, no email to verify, and recovery is the provider's problem.
+The remaining cost is a sessions table, which the library owns.
 
-**Add accounts when:** users need their lists on a new device *and* Drive sync
-turned out not to be enough.
+So: sign-in exists, and it is **optional in the strong sense**. The app runs with
+`NEXT_PUBLIC_CONVEX_URL` unset — no account UI, no Convex client, editor
+unchanged. Nothing in Phase 1 got a login wall.
+
+Still deliberately absent: email/password, magic links, and anonymous accounts.
+Each is one line in `convex/auth.ts`, and each brings back a piece of what was
+being avoided. Setup is in [06-auth.md](06-auth.md).
 
 ---
 
@@ -190,3 +198,32 @@ bodies would be the moment.
 | Undo for text edits | Typing a title floods the stack; only structural changes are recorded. Coalesce per field if anyone asks |
 | Reordering tier rows | You set S/A/B/C/D/F once and rename in place. Nobody has needed to drag a whole row yet |
 | Jikan calls of any kind | AniList returns `idMal` on every result, so MAL cross-referencing is already free — see [D1](#d1) |
+| Email/password, magic links, anonymous accounts | Someone can't use Google or GitHub — see [D2](#d2) |
+
+---
+
+## D11 — Convex Auth's React client, not its Next.js integration
+
+`@convex-dev/auth` ships two client integrations. The Next.js one (`/nextjs`)
+stores tokens in cookies and needs `convexAuthNextjsMiddleware`, so the server
+can read auth state during SSR. The React one (`/react`) stores them in
+localStorage and needs nothing else.
+
+The React one, because **no page here is server-rendered with auth state**. The
+editor is mounted `ssr: false` ([D8](#d8)) and the header is a client component.
+Middleware would add a request-time hop to every route to produce a value nothing
+reads.
+
+Consequences accepted:
+
+- Tokens are in localStorage, not httpOnly cookies. Worth stating plainly: this
+  trades XSS resistance for not running a server. There are no server-rendered
+  secrets, and a session grants nothing beyond a name and an avatar today — so
+  the trade is cheap now, and gets re-examined the moment a mutation can destroy
+  someone's data.
+- A signed-in user's first paint has no account UI — `viewer` resolves over the
+  websocket. Fine for a header chip; not fine if a *route* ever needs gating,
+  which is the trigger below.
+
+**Switch to `/nextjs` when:** a server component or route handler needs to know
+who the caller is — a private `/t/[id]`, or server-rendered per-user boards.

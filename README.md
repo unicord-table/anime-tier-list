@@ -20,6 +20,7 @@ See [`.docs/01-roadmap.md`](.docs/01-roadmap.md).
 - **Autosave** to localStorage, plus export/import of a `.json` save file
 - **Export PNG** of the whole board
 - **Preview** what the public page will look like
+- **Sign in** with Google or GitHub — optional, and it doesn't gate anything yet
 
 ## Getting started
 
@@ -31,6 +32,13 @@ npm install
 npm run dev
 ```
 
+That's the whole setup. Sign-in needs a Convex deployment on top, and without one
+the app simply hides the account UI — see [`.docs/06-auth.md`](.docs/06-auth.md).
+
+```bash
+npx convex dev
+```
+
 | Command | What it does |
 | --- | --- |
 | `npm run dev` | Dev server on http://localhost:3000 |
@@ -38,18 +46,22 @@ npm run dev
 | `npm test` | Board logic tests (Node's runner, no framework) |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run lint` | ESLint |
+| `npx convex dev` | Convex backend, watching `convex/` — only needed for sign-in |
 
 ## Stack
 
 Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 · dnd-kit ·
-Phosphor icons. No backend, no database, no accounts.
+Phosphor icons · Convex + Convex Auth for optional sign-in. The board itself
+still has no backend and no database — it lives in localStorage.
 
 ## Layout
 
 ```
+convex/           auth providers, schema, the `viewer` query (see .docs/06-auth.md)
 src/
   app/            route + Nocturne design tokens (globals.css)
   components/
+    auth/         AccountMenu — sign-in modal, avatar, sign-out
     ui/           Text, Button, IconButton, TextInput, Segmented,
                   Modal, Tag, Toast, ExternalLink
     anime/        AnimeCard, AnimeDetailModal
@@ -77,3 +89,4 @@ there, not in a component.
 | [`.docs/02-data-model.md`](.docs/02-data-model.md) | Save file schema, planned DB schema, routes |
 | [`.docs/03-apis.md`](.docs/03-apis.md) | AniList / Jikan / MAL / Drive contracts, verified against the live APIs |
 | [`.docs/04-decisions.md`](.docs/04-decisions.md) | Why it's built this way, and what was deliberately skipped |
+| [`.docs/06-auth.md`](.docs/06-auth.md) | Convex + OAuth setup, env vars, and the sign-in QA checklist |

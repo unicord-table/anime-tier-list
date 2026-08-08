@@ -2,6 +2,7 @@
 
 import { CloudCheck, Image as ImageIcon, Ranking, ShareNetwork } from "@phosphor-icons/react";
 
+import { AccountMenu } from "@/components/auth/AccountMenu";
 import { Button } from "@/components/ui/Button";
 import { Segmented } from "@/components/ui/Segmented";
 import { Text } from "@/components/ui/Text";
@@ -75,6 +76,8 @@ export function AppHeader({
       >
         Share
       </Button>
+
+      <AccountMenu />
     </header>
   );
 }

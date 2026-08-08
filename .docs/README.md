@@ -9,6 +9,8 @@ the intended design, not a description of what's built.
 | [02-data-model.md](02-data-model.md) | Touching the save file, DB, or routes |
 | [03-apis.md](03-apis.md) | Calling an external API |
 | [04-decisions.md](04-decisions.md) | Wondering "why is it done this way" |
+| [05-license.md](05-license.md) | Adding a dependency, or relicensing |
+| [06-auth.md](06-auth.md) | Setting up Convex, sign-in, or OAuth apps |
 
 ## The one-paragraph version
 
@@ -22,8 +24,10 @@ one.
 
 ## Ground rules
 
-1. **No accounts.** Publishing returns an edit token kept in localStorage. Sign-in
-   only ever gets added for Drive sync, and stays optional.
+1. **Accounts are optional.** Sign-in with Google or GitHub exists
+   ([06-auth.md](06-auth.md)), but nothing requires it: the board lives in
+   localStorage and the app runs with no Convex deployment configured at all.
+   Publishing will still return an edit token kept in localStorage.
 2. **No user uploads.** Cover art is hotlinked from AniList's CDN. This is not a
    perf decision — it means there is no image moderation surface at all.
 3. **One schema.** If you add a field, add it to `SaveFile` and bump `schema`.
