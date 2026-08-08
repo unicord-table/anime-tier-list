@@ -1,7 +1,7 @@
 # License
 
-**Decision: MIT.** See [`LICENSE`](../LICENSE), contributor terms in
-[`CONTRIBUTING.md`](../CONTRIBUTING.md).
+**Decision: MIT.** See [`LICENSE`](../../LICENSE), contributor terms in
+[`CONTRIBUTING.md`](../../CONTRIBUTING.md).
 
 ---
 

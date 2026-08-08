@@ -1,50 +1,108 @@
 # Auth
 
-Sign-in with Google or GitHub, via [Convex Auth](https://labs.convex.dev/auth).
-Everything below is setup you do **once per deployment** — none of it is checked
-into the repo, and the app runs without any of it (see
-[Running without Convex](#running-without-convex)).
+**Status: Built.** Optional Google/GitHub sign-in via Convex Auth. It currently
+gates nothing.
 
 ## What's in the repo
 
-| File | What it does |
+| File | Role |
 | --- | --- |
-| [`convex/auth.ts`](../convex/auth.ts) | The provider list — Google and GitHub |
-| [`convex/auth.config.ts`](../convex/auth.config.ts) | Tells Convex to trust its own issued JWTs |
-| [`convex/http.ts`](../convex/http.ts) | Mounts `/.well-known/jwks.json` and `/api/auth/*` |
-| [`convex/schema.ts`](../convex/schema.ts) | `authTables` — `users`, `authSessions`, `authAccounts`, … |
-| [`convex/users.ts`](../convex/users.ts) | `viewer` query: the signed-in user, or null |
-| [`src/components/ConvexClientProvider.tsx`](../src/components/ConvexClientProvider.tsx) | The client + `ConvexAuthProvider`, mounted in the root layout |
-| [`src/components/auth/AccountMenu.tsx`](../src/components/auth/AccountMenu.tsx) | Sign-in modal, avatar, sign-out — lives in `AppHeader` |
+| `convex/auth.ts` | `convexAuth({ providers: [Google, GitHub] })`; exports `auth`, `signIn`, `signOut`, `store`, `isAuthenticated` |
+| `convex/auth.config.ts` | Trusts JWTs issued by this deployment — `domain: process.env.CONVEX_SITE_URL`, `applicationID: "convex"` |
+| `convex/http.ts` | `auth.addHttpRoutes(http)` — serves JWKS and `/api/auth/signin/*`, `/api/auth/callback/*` |
+| `convex/schema.ts` | `defineSchema({ ...authTables })` — no custom tables |
+| `convex/users.ts` | `viewer` query |
+| `src/components/ConvexClientProvider.tsx` | Creates the client, or `null` when unconfigured |
+| `src/components/auth/AccountMenu.tsx` | Sign-in modal, avatar, sign-out |
 
-Profile data is not stored by this repo: `authTables.users` already holds
-`name`, `image` and `email`, and `authAccounts` holds `provider` and
-`providerAccountId`. `users.viewer` reads them back out.
+Neither provider declares a `scope`. The defaults — `openid email profile` for
+Google, `read:user user:email` for GitHub — are exactly the name, avatar, and
+email stored. Don't widen them without a reason.
+
+**Account linking is on verified email.** Signing in with GitHub and later with
+Google on the same address lands on one user, not two. Both providers return a
+verified email, which is why only these two are enabled.
 
 ## Environment variables
 
-Two live in the **web app** (`.env.local`, written for you by `npx convex dev`):
-
-| Variable | Value |
-| --- | --- |
-| `NEXT_PUBLIC_CONVEX_URL` | `https://<name>.convex.cloud` — the only one the browser sees |
-| `CONVEX_DEPLOYMENT` | Which deployment the CLI talks to. Never read by app code |
-
-The rest live on the **Convex deployment**, set with `npx convex env set NAME value`
-or from the dashboard. They are secrets and must never reach a `.env` file that
-gets committed:
-
-| Variable | Set by | Value |
+| Variable | Where | Purpose |
 | --- | --- | --- |
-| `SITE_URL` | `npx @convex-dev/auth` | Where OAuth returns the user — `http://localhost:3000` in dev, your real origin in prod |
-| `JWT_PRIVATE_KEY` | `npx @convex-dev/auth` | Signs session JWTs |
-| `JWKS` | `npx @convex-dev/auth` | Public half of the above |
-| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | you | Google OAuth client |
-| `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET` | you | GitHub OAuth app |
+| `CONVEX_DEPLOYMENT` | `.env.local` | Which deployment `npx convex dev` targets |
+| `NEXT_PUBLIC_CONVEX_URL` | `.env.local` | Websocket URL for `ConvexReactClient`. **Unset ⇒ no account UI** |
+| `NEXT_PUBLIC_CONVEX_SITE_URL` | `.env.local` | Convex HTTP origin (`.convex.site`), for OAuth redirects |
+| `CONVEX_SITE_URL` | Convex deployment env | Read by `auth.config.ts`. Set by Convex, not by you |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Convex deployment env | Google OAuth client |
+| `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET` | Convex deployment env | GitHub OAuth app |
+| `JWT_PRIVATE_KEY`, `JWKS` | Convex deployment env | Written by `@convex-dev/auth`'s init |
 
-`CONVEX_SITE_URL` (`https://<name>.convex.site`, note `.site` not `.cloud`) is
-injected by Convex — you never set it, but you need its value for the OAuth
-redirect URIs below. `npx convex env list` prints it.
+The split matters: `NEXT_PUBLIC_*` go in `.env.local` and ship to the browser;
+provider secrets go in the **Convex** deployment environment
+(`npx convex env set …` or the dashboard) and never touch the Next.js build.
+
+## Running without Convex
+
+`ConvexClientProvider` exports `convex` as `null` when `NEXT_PUBLIC_CONVEX_URL`
+is unset and renders children with no provider. The account UI hides itself; the
+editor is unaffected.
+
+**Every consumer of a Convex hook must null-check `convex` first** — `useQuery`
+and friends throw without a provider above them. `AccountMenu` does this; any
+new component that reads `viewer` must too.
+
+This is worth preserving. It is what makes `git clone && npm install && npm run
+dev` work for a contributor with no Convex account, and it keeps sign-in honestly
+optional rather than nominally optional.
+
+## Using auth in code
+
+```tsx
+// Client
+import { useQuery } from "convex/react";
+import { api } from "@convex/_generated/api";
+import { convex } from "@/components/ConvexClientProvider";
+
+const viewer = useQuery(api.users.viewer);   // undefined = loading, null = signed out
+```
+
+```ts
+// Server — reads
+const userId = await getAuthUserId(ctx);
+if (userId === null) return null;            // signed out is a normal answer
+
+// Server — writes (Planned helper, see social-feed.md)
+const userId = await requireUser(ctx);       // throws
+```
+
+The asymmetry is deliberate and stated in `convex/users.ts`: **queries may
+return `null`; mutations must throw.**
+
+## Consequences of the `/react` client
+
+`@convex-dev/auth/react`, not `/nextjs`. Full reasoning in
+[decisions.md D11](../decisions.md#d11). Two consequences to keep in mind:
+
+1. **Tokens are in `localStorage`, not httpOnly cookies.** This trades XSS
+   resistance for not running a server. Cheap today — a session grants a name and
+   an avatar. It stops being cheap the moment a mutation can destroy someone's
+   data, which is exactly when likes and comments land
+   ([social-feed.md](social-feed.md#likes)).
+2. **First paint has no account UI.** `viewer` resolves over the websocket. Fine
+   for a header chip; not fine if a route ever needs gating.
+
+**Switch to `/nextjs` when** a server component or route handler needs to know
+who the caller is. `/t/[slug]` showing viewer-specific state is the concrete
+case — see [sharing.md](sharing.md#urls).
+
+## Deliberately absent
+
+Email/password, magic links, and anonymous accounts. Each is one line in
+`convex/auth.ts`, and each brings back a piece of what OAuth-only avoids:
+password storage, email verification, account recovery. Add one when someone
+genuinely cannot use Google or GitHub.
+
+---
+
+# Setup
 
 ## Local development
 
@@ -111,49 +169,9 @@ Everything from the local section repeats against the production deployment —
 trailing slash), `npx convex env set --prod` for the four OAuth secrets, and the
 production callback URLs registered with Google and GitHub.
 
-## Using auth in code
+---
 
-Client:
-
-```tsx
-const viewer = useQuery(api.users.viewer);   // undefined = loading, null = signed out
-const { signIn, signOut } = useAuthActions();
-signIn("google");   // or "github" — redirects the browser
-```
-
-Server. `getAuthUserId` returns null for an unauthenticated caller, so anything
-that writes, or reads someone's private data, throws on it:
-
-```ts
-import { getAuthUserId } from "@convex-dev/auth/server";
-
-export const saveBoard = mutation({
-  args: { data: v.any() },
-  handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (userId === null) throw new Error("Not signed in");
-    // …userId is the only thing that decides what this call may touch.
-  },
-});
-```
-
-Never take a user id from arguments — a client can send any string. `viewer` is
-the exception to the throw: signed-out is a normal answer to "who am I", and the
-UI branches on it.
-
-There are no protected mutations yet, because nothing is stored server-side yet:
-boards still live in localStorage. The guard above is the pattern to use when
-Phase 2/3 puts them in Convex.
-
-## Running without Convex
-
-If `NEXT_PUBLIC_CONVEX_URL` is unset, `ConvexClientProvider` renders children
-without a Convex client and `AccountMenu` renders nothing. `npm run dev`,
-`npm run build` and the whole editor work exactly as before. Sign-in is additive,
-not a prerequisite — a contributor fixing a drag-and-drop bug never has to set up
-a Convex project.
-
-## QA checklist
+# QA checklist
 
 Manual, because the flows are OAuth round-trips through two third parties —
 automating them means real test accounts and stored credentials, which costs more
@@ -179,7 +197,7 @@ Step 10 is the one that regresses quietly: Convex Auth links accounts on
 **verified email**, so a provider that stops returning one silently creates
 duplicate users.
 
-## Troubleshooting
+# Troubleshooting
 
 | Symptom | Cause |
 | --- | --- |

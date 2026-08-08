@@ -4,6 +4,13 @@ Every claim below was checked against the live API on **2026-08-01** and the
 observed response recorded. These are third-party services — re-verify before
 depending on anything here.
 
+> **Scope note.** This page documents anime sources. Once the source registry
+> lands, each new source gets its own section here, and the contract every
+> source must satisfy lives in
+> [architecture/catalog-sources.md](../architecture/catalog-sources.md).
+> Google Drive below belongs to a plan that is now **superseded** — server-side
+> lists replace it. Kept for the scope research, which is still accurate.
+
 ---
 
 ## AniList GraphQL — primary source
@@ -44,7 +51,7 @@ Verified response for `s: "frieren"`:
   "seasonYear": 2023, "format": "TV", "averageScore": 91, "episodes": 28 }
 ```
 
-Maps onto `Media` in [02-data-model.md](02-data-model.md) field-for-field.
+Maps onto `Media` in [architecture/data-model.md](../architecture/data-model.md) field-for-field.
 
 ### Import a user's list
 
@@ -151,8 +158,14 @@ last sync.
 
 ## Cover images
 
-Hotlinked from `https://s4.anilist.co/...`. Requires a `next.config.ts`
-`remotePatterns` entry (see [01-roadmap.md](01-roadmap.md)).
+Hotlinked from `https://s4.anilist.co/...`.
+
+> **Correction (2026-08-08).** This section previously said a `next.config.ts`
+> `remotePatterns` entry is required. It is not: the app renders plain `<img>`,
+> never `next/image`, and `next.config.ts` has no `images` block. What *is*
+> required is that every `<img>` hitting AniList's CDN uses the same request
+> mode — see [frontend/design-system.md](../frontend/design-system.md#images)
+> and `src/lib/img.ts`.
 
 The real win isn't bandwidth — it's that no user ever uploads an image, so the
 app has no image storage, no CDN bill, and no moderation obligation. Keep it that
