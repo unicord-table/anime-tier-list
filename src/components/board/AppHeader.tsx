@@ -1,8 +1,9 @@
 "use client";
 
-import { CloudCheck, Image as ImageIcon, Ranking, ShareNetwork } from "@phosphor-icons/react";
+import { CloudCheck, Image as ImageIcon, ShareNetwork } from "@phosphor-icons/react";
 
 import { AccountMenu } from "@/components/auth/AccountMenu";
+import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
 import { Segmented } from "@/components/ui/Segmented";
 import { Text } from "@/components/ui/Text";
@@ -27,14 +28,7 @@ export function AppHeader({
 }) {
   return (
     <header className="flex h-[58px] flex-none items-center gap-[16px] border-b border-divider px-[16px]">
-      <div className="flex items-center gap-[9px]">
-        <div className="flex h-[30px] w-[30px] items-center justify-center rounded-md bg-[linear-gradient(150deg,var(--color-accent-500),var(--color-accent-800))] shadow-[0_0_0_1px_var(--color-accent-700)]">
-          <Ranking weight="fill" size={18} className="text-accent-100" />
-        </div>
-        <Text variant="ui" className="font-semibold tracking-[-0.01em]">
-          Tierist
-        </Text>
-      </div>
+      <Brand />
 
       <div className="h-[26px] w-px bg-divider" />
 
@@ -62,6 +56,8 @@ export function AppHeader({
         ]}
       />
 
+      <AccountMenu />
+
       <Button
         variant="secondary"
         icon={<ImageIcon size={16} />}
@@ -76,8 +72,6 @@ export function AppHeader({
       >
         Share
       </Button>
-
-      <AccountMenu />
     </header>
   );
 }

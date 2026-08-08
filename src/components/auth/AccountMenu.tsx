@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   GithubLogo,
   GoogleLogo,
+  ShieldCheck,
   SignOut,
   UserCircle,
 } from "@phosphor-icons/react";
@@ -12,6 +13,7 @@ import { useQuery } from "convex/react";
 
 import { api } from "@convex/_generated/api";
 import { convex } from "@/components/ConvexClientProvider";
+import { Brand } from "@/components/ui/Brand";
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
 import { Modal } from "@/components/ui/Modal";
@@ -88,37 +90,64 @@ function Account() {
 
   return (
     <>
-      <Button icon={<UserCircle size={16} />} onClick={() => setOpen(true)}>
+      <Button
+        variant="ghost"
+        icon={<UserCircle size={17} />}
+        onClick={() => setOpen(true)}
+      >
         Sign in
       </Button>
       <Modal
         open={open}
         onClose={() => setOpen(false)}
         label="Sign in"
-        className="max-w-[380px]"
+        className="max-w-[408px]"
       >
-        <div className="flex flex-col gap-[14px] p-[26px]">
-          <Text as="h2" variant="title">
-            Sign in to Tierist
+        <div className="relative px-[26px] pt-[26px] pb-[20px]">
+          {/* The accent hairline across the panel's top edge. */}
+          <div className="absolute top-0 right-[34px] left-[34px] h-px bg-[linear-gradient(90deg,transparent,var(--color-accent),transparent)]" />
+
+          <Brand />
+
+          <Text as="h2" variant="dialogTitle" className="mt-[16px]">
+            Welcome back
           </Text>
-          <Text variant="label" tone="muted">
-            Your board stays on this device — accounts don&apos;t sync it yet.
+          <Text as="p" variant="label" tone="muted" className="mt-[5px] mb-[18px]">
+            One tap with Google or GitHub — there is no password to set.
           </Text>
-          {PROVIDERS.map((p) => (
-            <Button
-              key={p.id}
-              icon={p.icon}
-              className="w-full justify-start"
-              onClick={() => void start(p.id, p.label)}
-            >
-              Continue with {p.label}
-            </Button>
-          ))}
+
+          <div className="flex gap-[9px]">
+            {PROVIDERS.map((p) => (
+              <Button
+                key={p.id}
+                variant="social"
+                icon={p.icon}
+                className="flex-1"
+                onClick={() => void start(p.id, p.label)}
+              >
+                {p.label}
+              </Button>
+            ))}
+          </div>
+
           {error ? (
-            <Text variant="label" tone="accent" role="alert">
+            <Text
+              as="p"
+              variant="label"
+              tone="accent"
+              role="alert"
+              className="mt-[13px]"
+            >
               {error}
             </Text>
           ) : null}
+
+          <div className="mt-[16px] flex items-center justify-center gap-[6px] border-t border-neutral-800 pt-[15px]">
+            <ShieldCheck size={14} className="text-accent-500" />
+            <Text variant="caption" tone="faint">
+              Boards on this device stay saved either way
+            </Text>
+          </div>
         </div>
       </Modal>
     </>

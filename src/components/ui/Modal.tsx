@@ -17,9 +17,21 @@ type ModalProps = {
   label: string;
   children: ReactNode;
   className?: string;
+  /**
+   * Extra classes for the close button. Only needed when it sits on something
+   * other than the panel — the detail modal puts it over cover art.
+   */
+  closeClassName?: string;
 };
 
-export function Modal({ open, onClose, label, children, className }: ModalProps) {
+export function Modal({
+  open,
+  onClose,
+  label,
+  children,
+  className,
+  closeClassName,
+}: ModalProps) {
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -62,7 +74,7 @@ export function Modal({ open, onClose, label, children, className }: ModalProps)
           title="Close"
           icon={<X weight="bold" />}
           onClick={onClose}
-          className="absolute top-[10px] right-[10px] z-10 bg-[rgba(11,12,20,.55)] text-neutral-300 hover:text-ink"
+          className={cn("absolute top-[14px] right-[14px] z-10", closeClassName)}
         />
         {children}
       </div>

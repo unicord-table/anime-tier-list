@@ -63,7 +63,8 @@ the `--font-inter` CSS variable.
 | --- | --- |
 | `Text` | The only text API. See the variant/tone tables below |
 | `SectionLabel` | Exported from `Text.tsx` — `variant="sectionLabel" tone="subtle"` |
-| `Button` | Text actions |
+| `Brand` | The logo lockup — header and sign-in modal render the same one |
+| `Button` | Text actions — `primary` / `secondary` / `ghost`, plus `social`, the taller filled OAuth button in the sign-in modal |
 | `IconButton` | Icon-only actions — the tool rail, tier controls |
 | `TextInput` | Board title, tier label, search, import handle |
 | `Segmented` | Catalog's search/import tab switch |
@@ -75,11 +76,23 @@ the `--font-inter` CSS variable.
 `cn.ts` is a 3-line class joiner. There is no `clsx`, no `tailwind-merge`, and
 no `cva`.
 
+> **Consequence, and it has already bitten once.** Because nothing merges, two
+> classes that set the same property are resolved by Tailwind's own ordering in
+> the generated stylesheet — *not* by which one `cn` lists last. `Button`'s base
+> used to carry `bg-transparent border-transparent`, which silently beat every
+> variant's `border-accent` / `border-divider`: the Share and PNG buttons had
+> invisible borders for as long as the component existed. The fix is the rule
+> to follow: **a property belongs to exactly one layer.** If variants set it,
+> the base must not, and every variant must set it. Overriding from a call site
+> only reliably works for a property the primitive leaves alone (`max-w-[408px]`
+> against a base that sets `w-*`).
+
 ### `Text` variants
 
 | Variant | Size / weight | Used for |
 | --- | --- | --- |
 | `display` | 34px medium | Page-level heading (also via the `H1` helper) |
+| `dialogTitle` | 23px medium | Nocturne h3 — the heading inside a modal |
 | `title` | 17px semibold | Modal and panel titles |
 | `tierLabel` / `tierLabelLg` | 21 / 23px bold | Tier row labels |
 | `eyebrow` | 13px medium, uppercase, tracked | Overlines |
