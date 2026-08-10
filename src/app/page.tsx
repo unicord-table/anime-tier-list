@@ -42,7 +42,7 @@ export default async function Home({
 
   return (
     <div className="min-h-full bg-canvas text-ink">
-      <SiteHeader query={query} />
+      <SiteHeader query={query} active="feed" />
 
       <section className="relative overflow-hidden border-b border-divider">
         <div

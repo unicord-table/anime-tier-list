@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Tierist — anime tier lists",
+  title: "Unicord — anime tier lists",
   description:
     "Build, save, and share anime tier lists. Search AniList or import a public list, drag titles into tiers, export a save file.",
 };

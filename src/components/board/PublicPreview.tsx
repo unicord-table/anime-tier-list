@@ -30,7 +30,7 @@ export function PublicPreview({
         <div className="flex items-center gap-[8px] rounded-[9px] border border-divider bg-surface px-[12px] py-[7px]">
           <GlobeSimple size={15} className="text-neutral-500" />
           <Text variant="uiSm" tone="faint" className="font-normal">
-            tierist.app/t/…
+            unicord.app/t/…
           </Text>
         </div>
         <Text variant="label" tone="muted">
@@ -60,7 +60,7 @@ export function PublicPreview({
           <div className="mt-[30px] flex items-center justify-center gap-[7px]">
             <Ranking weight="fill" size={15} className="text-accent-500" />
             <Text variant="label" tone="faint">
-              Made with Tierist
+              Made with Unicord
             </Text>
           </div>
         </div>

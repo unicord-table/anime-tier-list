@@ -87,6 +87,7 @@ Two things about this diagram are the whole architecture:
 | `/t/[slug]` | `src/app/t/[slug]/page.tsx` | Server component | `tierlists.bySlug`, one read |
 | `/tierlists` | `src/app/tierlists/page.tsx` | Shell + client `MyBoards` | `tierlists.mine`, paginated |
 | `/tierlist` | `src/app/tierlist/page.tsx` | `TierListShell`, `ssr: false` | localStorage |
+| `/changelog` | `src/app/changelog/page.tsx` | Server component | `src/lib/changelog.ts`, static |
 
 The editor is still mounted with `ssr: false` — reasoning in
 [decisions.md D8](../decisions.md#d8). There are no route handlers and no

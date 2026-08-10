@@ -5,7 +5,7 @@ import type { ElementType, ComponentPropsWithoutRef, ReactNode } from "react";
  * through here, so a size or colour change happens in one place instead of
  * across forty inline styles.
  *
- * Variants are drawn from the Nocturne scale plus the sizes the Tierist design
+ * Variants are drawn from the Nocturne scale plus the sizes the Unicord design
  * actually uses — nothing speculative. Add one here rather than reaching for a
  * raw `text-[13px]` in a component.
  */

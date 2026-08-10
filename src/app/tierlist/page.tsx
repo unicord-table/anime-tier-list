@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { TierListShell } from "@/components/TierListShell";
 
 export const metadata: Metadata = {
-  title: "Tier list editor — Tierist",
+  title: "Tier list editor — Unicord",
   description:
     "Drag anime into tiers, search AniList or import a public list, and export a PNG or a save file.",
 };

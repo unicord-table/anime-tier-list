@@ -1,4 +1,4 @@
-# Tierist — anime tier list
+# Unicord — anime tier list
 
 Build, save, and share anime tier lists. Search the AniList catalog or import a
 public list by username, drag titles into tiers, click any cover for details, and

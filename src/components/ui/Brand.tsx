@@ -1,7 +1,7 @@
 import { Ranking } from "@phosphor-icons/react";
 import { Text } from "./Text";
 
-/** The Tierist lockup. The header and the sign-in modal show the same one. */
+/** The Unicord lockup. The header and the sign-in modal show the same one. */
 export function Brand() {
   return (
     <div className="flex items-center gap-[9px]">
@@ -9,7 +9,7 @@ export function Brand() {
         <Ranking weight="fill" size={18} className="text-accent-100" />
       </div>
       <Text variant="ui" className="font-semibold tracking-[-0.01em]">
-        Tierist
+        Unicord
       </Text>
     </div>
   );

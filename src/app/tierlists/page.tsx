@@ -9,7 +9,7 @@ import { Heading, Text } from "@/components/ui/Text";
 import { TIERLIST_ROUTE } from "@/lib/feed";
 
 export const metadata: Metadata = {
-  title: "My tier lists — Tierist",
+  title: "My tier lists — Unicord",
   description: "Every tier list you have published, with its share link.",
   robots: { index: false, follow: false },
 };
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export default function MyTierListsPage() {
   return (
     <div className="min-h-full bg-canvas text-ink">
-      <SiteHeader />
+      <SiteHeader active="mine" />
 
       <main className="mx-auto max-w-[940px] px-[26px] pt-[40px] pb-[60px]">
         <div className="mb-[26px] flex flex-wrap items-end gap-[16px]">

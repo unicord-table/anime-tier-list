@@ -5,7 +5,9 @@ import { AccountMenu } from "@/components/auth/AccountMenu";
 import { buttonClass } from "@/components/ui/Button";
 import { Text } from "@/components/ui/Text";
 import { TextInput } from "@/components/ui/TextInput";
-import { MY_BOARDS_ROUTE, TIERLIST_ROUTE } from "@/lib/feed";
+import { REPO_URL } from "@/lib/changelog";
+import { cn } from "@/lib/cn";
+import { CHANGELOG_ROUTE, MY_BOARDS_ROUTE, TIERLIST_ROUTE } from "@/lib/feed";
 
 /**
  * Header and footer for the scrolling public pages. The editor keeps its own
@@ -16,10 +18,16 @@ import { MY_BOARDS_ROUTE, TIERLIST_ROUTE } from "@/lib/feed";
  * page renders on the server with no client bundle beyond `AccountMenu`.
  */
 
-const NAV_LINK =
-  "border-b border-transparent py-[6px] text-neutral-400 transition-colors hover:border-accent hover:text-ink";
+const NAV = [
+  { key: "feed", label: "Feed", href: "/" },
+  { key: "mine", label: "My tier lists", href: MY_BOARDS_ROUTE },
+  { key: "changelog", label: "Changelog", href: CHANGELOG_ROUTE },
+] as const;
 
-export function SiteHeader({ query = "" }: { query?: string }) {
+/** Which nav item is lit. Every page passes its own — no page defaults to Feed. */
+export type NavKey = (typeof NAV)[number]["key"];
+
+export function SiteHeader({ query = "", active }: { query?: string; active?: NavKey }) {
   return (
     <header className="sticky top-0 z-40 flex flex-wrap items-center gap-x-[22px] gap-y-[10px] border-b border-divider bg-[color-mix(in_srgb,var(--color-canvas)_88%,transparent)] px-[26px] py-[13px] backdrop-blur-[10px]">
       <Link href="/" className="flex items-center gap-[9px] text-ink">
@@ -27,26 +35,28 @@ export function SiteHeader({ query = "" }: { query?: string }) {
           <Ranking weight="fill" size={18} className="text-accent-100" />
         </div>
         <Text variant="ui" className="font-semibold tracking-[-0.01em]">
-          Tierist
+          Unicord
         </Text>
       </Link>
 
       <nav aria-label="Primary" className="hidden items-center gap-[20px] md:flex">
-        <Link href="/" className="border-b border-accent py-[6px] text-ink">
-          <Text variant="uiSm" tone="inherit">
-            Feed
-          </Text>
-        </Link>
-        <Link href={MY_BOARDS_ROUTE} className={NAV_LINK}>
-          <Text variant="uiSm" tone="inherit">
-            My tier lists
-          </Text>
-        </Link>
-        <Link href="/#announcements" className={NAV_LINK}>
-          <Text variant="uiSm" tone="inherit">
-            Changelog
-          </Text>
-        </Link>
+        {NAV.map((item) => (
+          <Link
+            key={item.key}
+            href={item.href}
+            aria-current={active === item.key ? "page" : undefined}
+            className={cn(
+              "border-b py-[6px] transition-colors",
+              active === item.key
+                ? "border-accent text-ink"
+                : "border-transparent text-neutral-400 hover:border-accent hover:text-ink",
+            )}
+          >
+            <Text variant="uiSm" tone="inherit">
+              {item.label}
+            </Text>
+          </Link>
+        ))}
       </nav>
 
       <div className="flex-1" />
@@ -90,14 +100,12 @@ const FOOTER_GROUPS = [
     heading: "Explore",
     links: [
       { label: "Recently published", href: "/#browse" },
-      { label: "Changelog", href: "/#announcements" },
+      { label: "Changelog", href: CHANGELOG_ROUTE },
     ],
   },
   {
     heading: "Site",
-    links: [
-      { label: "GitHub", href: "https://github.com/unicord-table/anime-tier-list" },
-    ],
+    links: [{ label: "GitHub", href: REPO_URL }],
   },
 ];
 
@@ -111,7 +119,7 @@ export function SiteFooter() {
               <Ranking weight="fill" size={15} className="text-accent-100" />
             </div>
             <Text variant="uiSm" className="font-semibold">
-              Tierist
+              Unicord
             </Text>
           </div>
           <Text as="p" variant="label" tone="faint" className="block max-w-[34ch]">
@@ -126,7 +134,15 @@ export function SiteFooter() {
               {group.heading}
             </Text>
             {group.links.map((link) => (
-              <Link key={link.label} href={link.href} className="text-accent-300 hover:text-accent-200">
+              <Link
+                key={link.label}
+                href={link.href}
+                // The GitHub link leaves the site; the rest are internal.
+                {...(link.href.startsWith("http")
+                  ? { target: "_blank", rel: "noopener noreferrer" }
+                  : {})}
+                className="text-accent-300 hover:text-accent-200"
+              >
                 <Text variant="label" tone="inherit">
                   {link.label}
                 </Text>

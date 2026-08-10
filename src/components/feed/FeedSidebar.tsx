@@ -10,7 +10,8 @@ import {
 import { buttonClass } from "@/components/ui/Button";
 import { Tag } from "@/components/ui/Tag";
 import { Text } from "@/components/ui/Text";
-import { ANNOUNCEMENTS, MY_BOARDS_ROUTE, TIERLIST_ROUTE } from "@/lib/feed";
+import { CHANGELOG, TAG_TONE } from "@/lib/changelog";
+import { CHANGELOG_ROUTE, MY_BOARDS_ROUTE, TIERLIST_ROUTE } from "@/lib/feed";
 
 /**
  * Announcements, quick links, and the CTA.
@@ -40,13 +41,14 @@ export function FeedSidebar() {
           </Text>
         </div>
 
-        {ANNOUNCEMENTS.map((item) => (
+        {/* The head of the changelog, not a second hand-kept list. */}
+        {CHANGELOG.slice(0, 3).map((item) => (
           <div key={item.title} className="border-t border-neutral-800 py-[11px]">
             <div className="mb-[4px] flex items-center gap-[8px]">
               <Text variant="caption" tone="faint" className="tracking-[0.04em] uppercase">
                 {item.date}
               </Text>
-              <Tag tone={item.kind === "Shipped" ? "neutral" : "outline"}>{item.kind}</Tag>
+              <Tag tone={TAG_TONE[item.kind]}>{item.kind}</Tag>
             </div>
             <Text variant="uiSm" className="mb-[3px] block leading-[1.35]">
               {item.title}
@@ -56,6 +58,15 @@ export function FeedSidebar() {
             </Text>
           </div>
         ))}
+
+        <Link
+          href={CHANGELOG_ROUTE}
+          className="block border-t border-neutral-800 pt-[11px] text-accent-300 hover:text-accent-200"
+        >
+          <Text variant="label" tone="inherit">
+            Everything that’s changed →
+          </Text>
+        </Link>
       </section>
 
       <section className="rounded-[12px] bg-surface p-[10px] shadow-sm">

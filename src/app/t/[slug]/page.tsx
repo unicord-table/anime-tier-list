@@ -29,10 +29,10 @@ const load = async (slug: string) =>
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const board = await load((await params).slug);
-  if (!board) return { title: "Tier list not found — Tierist" };
+  if (!board) return { title: "Tier list not found — Unicord" };
 
   return {
-    title: `${board.title} — Tierist`,
+    title: `${board.title} — Unicord`,
     description:
       board.description ||
       `${board.itemCount} titles ranked across ${board.tierCount} tiers by ${board.author.name}.`,
@@ -95,7 +95,7 @@ export default async function PublishedBoardPage({ params }: Params) {
           <Ranking weight="fill" size={15} className="text-accent-500" />
           <Link href="/" className="text-accent-300 hover:text-accent-200">
             <Text variant="label" tone="inherit">
-              Made with Tierist
+              Made with Unicord
             </Text>
           </Link>
         </div>
