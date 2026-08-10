@@ -1,11 +1,37 @@
 # Share links
 
-**Status: Planned.** Today `TierListApp`'s `onShare` shows the toast
-*"Publishing arrives in Phase 2 — export a PNG or .json for now"*. Nothing is
-published.
+**Status: Built**, with named gaps. Share opens `PublishDialog`, `publish`
+stores the board and mints a slug, and `/t/[slug]` renders it.
+
+| Planned here | Shipped? |
+| --- | --- |
+| `tierlists` table, publish / update / get | Yes — `convex/tierlists.ts`, plus `remove` and `mine` |
+| `/t/[slug]` server-rendered, one read, zero catalog calls | Yes |
+| Remix | Yes — `RemixButton` in `components/board/BoardActions.tsx` |
+| Payload / item / tier caps, text sanitisation, image allowlist | Yes — `src/lib/publish.ts`, enforced on both sides |
+| `noindex` on `/t/[slug]` | Yes |
+| Anonymous publish + edit tokens + claim | **No** — superseded by [D15](../decisions.md#d15) |
+| Publishes per IP rate limit | **No** — see [Still missing](#still-missing) |
+| Reports table | **No** — same |
+| OpenGraph image | **No** — same |
+| View counts | Not built, and that was one of the options |
 
 This is the headline feature of the product: hand someone a URL and they see
 your tier list. Everything else in the social layer depends on it existing.
+
+## Still missing
+
+Three of the "non-negotiable" abuse controls below did not ship. What changed
+the calculus is [D15](../decisions.md#d15): publishing requires an account, so
+the threat model is "a signed-in user misbehaves", not "the open internet can
+write to your database". That lowers the urgency; it does not make them
+unnecessary.
+
+| Gap | Ship it when |
+| --- | --- |
+| Rate limiting | Before anonymous publishing returns, or at the first sign of one account writing in bulk. `@convex-dev/rate-limiter` — do not hand-roll a counter |
+| `reports` table + report action | Before `/t/[slug]` is indexable, or the first time a takedown request has nowhere to land |
+| OpenGraph image | Whenever link unfurls matter. Option (2) below is still the right starting point |
 
 ## Shape of the feature
 
@@ -30,9 +56,10 @@ almost nothing — the published document *is* a `SaveFile`, so remix is
 
 | Route | Rendering | Purpose |
 | --- | --- | --- |
-| `/t/[slug]` | Server component | The shared board. One DB read, zero catalog API calls. |
-| `/t/[slug]/opengraph-image` | Route segment | OG card. See [OpenGraph](#opengraph) below. |
-| `/` | Client, `ssr: false` | Editor, unchanged |
+| `/t/[slug]` | Server component | The shared board. One DB read, zero catalog API calls. **Built** |
+| `/t/[slug]/opengraph-image` | Route segment | OG card. See [OpenGraph](#opengraph) below. **Not built** |
+| `/tierlist` | Client, `ssr: false` | Editor. `?board=<slug>` opens a published board — as an edit if you own it, as a copy if you don't |
+| `/tierlists` | Client | Your published boards, paginated |
 
 `slug` is `nanoid(10)` — URL-safe, ~10^17 space, unguessable enough that an
 unlisted board is genuinely unlisted. Do not use a title slug: titles collide,
@@ -43,13 +70,25 @@ change, and leak content into the URL.
 > `@convex-dev/auth/react` to `@convex-dev/auth/nextjs`. Decide that **before**
 > building `/t/[slug]`, not after — retrofitting means touching every auth
 > consumer.
+>
+> **Decided: stay on `/react`.** `/t/[slug]` reads anonymously, so it renders
+> nothing viewer-specific and needs no token on the server. The page's only
+> owner-aware affordance would have been "edit this", and that lives on
+> `/tierlists` instead, which is a client component. The trigger fires again the
+> day a server-rendered route has to branch on the viewer.
 
 Strictly, `/t/[slug]` only needs auth on the server once the page shows
 viewer-specific state (your like, your follow button, "edit this" for the
 owner). A first version that renders the board and hydrates interactivity
 client-side avoids the migration. Pick deliberately; don't drift into it.
 
-## Ownership: two models, both required
+## Ownership: two models, both required ~~one model~~
+
+> **Superseded by [D15](../decisions.md#d15).** Only the signed-in row shipped:
+> `ownerId` is required and `tierlists.publish` throws for a signed-out caller.
+> There is no `editTokenHash`, no `localStorage["atl:tokens"]`, and no `claim`.
+> The original reasoning is kept below because reversing it is a live option —
+> the schema change is additive.
 
 | Publisher | Stored | Can edit by |
 | --- | --- | --- |
@@ -66,6 +105,11 @@ store only `sha256(token)`. Losing the token means losing edit rights to that
 link — acceptable, because the user still holds their local copy and can
 republish. A signed-in user should be able to **claim** an anonymous list by
 presenting the token, which sets `ownerId` and clears `editTokenHash`.
+
+**What shipped instead.** Every write goes through `requireOwnedBoard` in
+`convex/lib/auth.ts`, which derives the user from the request identity and
+returns the same error for "no such board" and "not yours" — a distinguishable
+pair would turn the id space into an existence oracle.
 
 ## Visibility
 
@@ -110,29 +154,34 @@ AniList profile. That will exceed the 500-item publish cap. Cap the publish, not
 the import, and say so in the error: *"Published boards are capped at 500 items —
 this board has 1,240."*
 
-## Mutations
+## Functions
 
 ```ts
-// convex/tierlists.ts (Planned)
+// convex/tierlists.ts (Built)
 
-publish({ data, visibility })
-  -> validate(data) -> { slug, editToken? }
+publish({ title, description, visibility, data })  -> { id, slug }
+update({ id, title, description, visibility, data? }) -> { slug }
+remove({ id })                                     -> null
 
-update({ slug, data, editToken? })
-  -> requires ownerId match OR sha256(editToken) === editTokenHash
-
-claim({ slug, editToken })
-  -> requires signed in; sets ownerId, clears editTokenHash
-
-get({ slug })
-  -> respects visibility; increments viewCount (see below)
+bySlug({ slug })          -> summary + data + isOwner, or null
+mine({ paginationOpts })  -> paginated summaries; empty when signed out
+feed({ query?, limit? })  -> public boards, newest first
 ```
 
-`validate(data)` is one shared function used by both `publish` and `update`, and
-it is the same referential-integrity pass as `parseSaveFile` plus the caps
-above. **Share the code with the client** — `src/lib/` is importable from
-`convex/` in this repo layout, and a validation rule that exists in only one of
-the two places will drift.
+`update` takes `data` optionally, so renaming a board does not reupload its
+payload. `bySlug` returns `isOwner` — that one boolean is what lets the editor
+choose between "update this board" and "open it as my own copy", and it is
+always false on the anonymous server render.
+
+`prepareBoard(data)` is the shared gate, used by `publish` and `update` and by
+the dialog before it submits. It is `parseSaveFile`'s referential-integrity pass
+plus the caps above. **The code is shared with the client** — `src/lib/` is
+importable from `convex/` in this repo layout, and a validation rule that exists
+in only one of the two places will drift.
+
+`summarize()` builds every card payload, listing fields one at a time rather
+than spreading the document. That is what keeps the `data` blob and the owner's
+email out of a listing, and the `returns:` validator is what enforces it.
 
 **View counts.** Incrementing a counter on every read makes every page view a
 write, and turns one hot board into a write-contention hotspot. Options, cheapest
@@ -167,9 +216,11 @@ than rendering per request — the board only changes when it is updated.
   ever find yourself calling AniList from `/t/[slug]`, the data model has been
   broken.
 - **No editor bundle.** The public page should not ship `@dnd-kit` or
-  `html-to-image`. Keep the read-only board renderer a separate component from
-  `BoardEditor`. `PublicPreview` is the natural starting point — it already
-  renders a board read-only from a `SaveFile`.
+  `html-to-image`. That is why the renderer is
+  `components/board/ReadOnlyBoard.tsx`, extracted out of `PublicPreview` and now
+  shared by both. It carries no `"use client"` directive, so it compiles as a
+  server component on `/t/[slug]` and as a client one inside the editor's
+  preview, where it also takes the `ref` the PNG export needs.
 
 ## Done when
 

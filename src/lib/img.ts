@@ -1,6 +1,16 @@
 import type { SyntheticEvent } from "react";
 
 /**
+ * The placeholder behind a cover, seeded from AniList's dominant cover colour.
+ * Feed thumbnails render it on its own — a listing page shows dozens of boards,
+ * and swatches cost no image requests.
+ */
+export const coverGradient = (color: string | null | undefined): string => {
+  const base = color || "#3f424d";
+  return `linear-gradient(155deg, ${base}, color-mix(in srgb, ${base} 35%, #11121e))`;
+};
+
+/**
  * AniList's CDN only sends Access-Control-Allow-Origin when the request carries
  * one, and the browser's HTTP cache does not key on request mode — so a copy
  * cached by a plain (non-CORS) request has no ACAO header and every

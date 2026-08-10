@@ -3,11 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "concurrently --raw --names next,convex \"npm:dev:next\" \"npm:dev:convex\"",
+    "dev:next": "next dev",
+    "dev:convex": "convex dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test \"src/**/*.test.ts\"",
+    "test": "npm run test:lib && npm run test:convex",
+    "test:lib": "node --test \"src/**/*.test.ts\"",
+    "test:convex": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -27,13 +31,17 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@edge-runtime/vm": "^5.0.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^10.0.4",
+    "convex-test": "^0.0.55",
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   }
 }

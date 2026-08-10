@@ -127,7 +127,7 @@ business.
 ## Follow-up for maintainers
 
 1. **Confirm the copyright line.** `LICENSE` reads
-   `Copyright (c) 2026 unicord-table and the Tierist contributors`. Swap in a
+   `Copyright (c) 2026 unicord-table and the Unicord contributors`. Swap in a
    personal or legal-entity name if that is preferred.
 2. **Relicensing consent is not an issue yet.** Git history is five commits by
    one author (`Karl`) plus one merged PR from the same author. No third-party

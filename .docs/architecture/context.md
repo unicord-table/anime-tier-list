@@ -9,7 +9,7 @@ Today there is one user type and no server-held state.
 ```mermaid
 flowchart TB
     user(["Creator<br/>builds a tier list"])
-    app["Tierist<br/>Next.js app, browser-resident"]
+    app["Unicord<br/>Next.js app, browser-resident"]
     anilist["AniList<br/>GraphQL API + CDN"]
     oauth["Google / GitHub<br/>OAuth providers"]
     convex["Convex<br/>auth backend"]
@@ -29,7 +29,7 @@ the backend load-bearing.
 flowchart TB
     creator(["Creator"])
     viewer(["Viewer<br/>arrives via a shared link"])
-    app["Tierist"]
+    app["Unicord"]
     convex["Convex<br/>data + auth + feed"]
     sources["Catalog sources<br/>AniList, and others"]
     oauth["OAuth providers"]

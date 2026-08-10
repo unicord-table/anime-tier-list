@@ -106,10 +106,15 @@ build order: each row only makes sense once the row above it exists.
 ## The naming problem
 
 The repo is `anime-tier-list`, the package is `anime-tier-list`, the app calls
-itself **Tierist** in `layout.tsx` metadata, and the GitHub org is
+itself **Unicord** in `layout.tsx` metadata, and the GitHub org is
 `unicord-table`. The storage key prefix is `atl:`.
 
-That's four names for one product, and the anime-specific ones become actively
-misleading the moment a games board exists. **Open** — pick one before the
-multi-topic work starts. Note that `atl:` is inside every saved board, so
-renaming the storage prefix costs a migration; the other three are free.
+That was four names for one product, and the anime-specific ones become
+actively misleading the moment a games board exists.
+
+**Settled** — the product is **Unicord**, matching the org. The user-facing
+name is now one word everywhere: metadata, the header and footer lockups, the
+`LICENSE` line. Still on the anime-specific names: the repo, the package, and
+the `atl:` storage prefix. The first two are free to rename; `atl:` is inside
+every saved board, so it costs a migration and is best folded into the
+`schema: 2` backfill rather than paid for on its own.

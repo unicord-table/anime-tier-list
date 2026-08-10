@@ -9,6 +9,10 @@
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
+    // `npm test` is bare `node --test` with no runner, so a test's imports must
+    // be paths Node's ESM loader can resolve — extension included. That reaches
+    // one file deep: feed.test.ts imports feed.ts, which imports board.ts.
+    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",

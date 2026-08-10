@@ -64,9 +64,12 @@ the `--font-inter` CSS variable.
 | `Text` | The only text API. See the variant/tone tables below |
 | `SectionLabel` | Exported from `Text.tsx` — `variant="sectionLabel" tone="subtle"` |
 | `Brand` | The logo lockup — header and sign-in modal render the same one |
-| `Button` | Text actions — `primary` / `secondary` / `ghost`, plus `social`, the taller filled OAuth button in the sign-in modal |
+| `Button` | Text actions — `primary` / `secondary` / `ghost`, plus `social`, the taller filled OAuth button in the sign-in modal. Exports `buttonClass` for the `<Link>`s that need the same skin — an anchor cannot be a `<button>`, and nesting them is invalid |
 | `IconButton` | Icon-only actions — the tool rail, tier controls |
-| `TextInput` | Board title, tier label, search, import handle |
+| `TextInput` | Board title, tier label, search, import handle. The `search` variant owns its own left padding so a leading icon fits — see the `cn`-does-not-merge warning above |
+| `BoardThumb` | `components/feed/` — the miniature board on a feed or listing card, drawn from the stored `preview`. Decorative, `aria-hidden`; two sizes |
+| `BoardCard` | `components/feed/` — one published board, with an `actions` slot the owner's listing fills |
+| `ReadOnlyBoard` | `components/board/` — a board with no editor attached. No `"use client"`, so it compiles server-side on `/t/[slug]` and client-side inside `PublicPreview` |
 | `Segmented` | Catalog's search/import tab switch |
 | `Modal` | Detail modal, sign-in modal |
 | `Tag` | Genre chips in the detail modal |
@@ -91,13 +94,18 @@ no `cva`.
 
 | Variant | Size / weight | Used for |
 | --- | --- | --- |
+| `hero` | `clamp(32px, 6vw, 46px)` medium | The landing-page headline, and only that |
 | `display` | 34px medium | Page-level heading (also via the `H1` helper) |
 | `dialogTitle` | 23px medium | Nocturne h3 — the heading inside a modal |
 | `title` | 17px semibold | Modal and panel titles |
 | `tierLabel` / `tierLabelLg` | 21 / 23px bold | Tier row labels |
+| `tierLabelSm` | 11px bold | Tier letters on a `BoardThumb`, all three sizes |
+| `sectionTitle` | 15px medium | Feed section headings |
+| `stat` | 22px semibold | Landing-page counters |
 | `eyebrow` | 13px medium, uppercase, tracked | Overlines |
 | `sectionLabel` | 12px semibold | Section headers |
 | `body` | 15px | Prose — synopsis, descriptions |
+| `bodySm` | 13px | Card excerpts, announcement bodies |
 | `ui` / `uiSm` | 14 / 13px medium | Buttons, controls |
 | `label` | 12px | Field labels, card titles |
 | `caption` | 11px | Secondary metadata |
@@ -105,8 +113,9 @@ no `cva`.
 
 ### `Text` tones
 
-`default` (ink) · `muted` · `subtle` · `dim` · `faint` · `accent` ·
-`accentSoft` · `card` · `cardDim` · `onTier` · `inherit`
+Brightest to dimmest: `default` (ink) · `muted` · `bright` (neutral-200) ·
+`subtle` (300) · `dim` (400) · `faint` (500) · `ghost` (600). Plus `accent` ·
+`accentSoft` · `card` · `cardDim` · `onTier` · `inherit`.
 
 `card` / `cardDim` are for text over cover art; `onTier` is for text on a tier's
 user-chosen colour. `inherit` emits no colour class — use it inside a component
@@ -145,14 +154,16 @@ poisoned cache entry in the first place. `AnimeCard`, `AnimeDetailModal`, and
 
 ## Layout
 
-`layout.tsx` sets `h-full` on `<html>` and `h-full overflow-hidden` on `<body>`:
-the editor is an app-shell layout, not a scrolling document. The board scrolls
-in its own container inside `BoardEditor`; the page does not.
+`layout.tsx` sets `h-full` on `<html>` and on `<body>`. The editor is an
+app-shell layout, not a scrolling document: the board scrolls in its own
+container inside `BoardEditor`, and the page does not.
 
-> **This will not survive the feed.** A newsfeed, a profile page, and a public
-> board are all scrolling documents. Expect `overflow-hidden` on `<body>` to
-> move out of the root layout and into a route group for the editor when those
-> routes land. Plan for it rather than discovering it.
+> **Resolved, as predicted.** `overflow-hidden` used to sit on `<body>`, which
+> would have clipped the landing page. It now lives on `TierListApp`'s own root
+> element, so the clip belongs to the editor and every other route scrolls
+> normally. It did *not* need the route group the old note expected — a nested
+> layout cannot restyle `<body>` anyway, and the editor already had a root
+> element to put the class on.
 
 ## Adding a component
 

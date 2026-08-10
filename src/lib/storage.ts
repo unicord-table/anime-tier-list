@@ -1,5 +1,7 @@
 import type { Media, SaveFile, Tier } from "./types";
-import { TIER_PRESET_COLORS } from "./board";
+// Extension included so Node's ESM loader can walk here from a *.test.ts —
+// see .docs/architecture/components.md.
+import { TIER_PRESET_COLORS } from "./board.ts";
 
 const SAVE_KEY = "atl:save";
 

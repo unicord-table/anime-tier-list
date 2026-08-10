@@ -28,6 +28,20 @@ const VARIANTS = {
 
 export type ButtonVariant = keyof typeof VARIANTS;
 
+const BASE =
+  "inline-flex cursor-pointer items-center justify-center gap-[6px] rounded-md border " +
+  "font-heading text-[14px] leading-[1.2] font-medium " +
+  "transition-colors disabled:cursor-not-allowed disabled:opacity-45";
+
+/**
+ * The same skin as `<Button>`, for the handful of call sites that need an
+ * anchor: a `<Link>` cannot be a `<button>`, and nesting one inside the other
+ * is invalid. Keeps both on one source of truth rather than a copied class
+ * string that drifts.
+ */
+export const buttonClass = (variant: ButtonVariant = "secondary", className?: string) =>
+  cn(BASE, VARIANTS[variant], className);
+
 type ButtonProps = {
   variant?: ButtonVariant;
   icon?: ReactNode;
@@ -45,14 +59,7 @@ export function Button({
   return (
     <button
       type={type}
-      className={cn(
-        "inline-flex cursor-pointer items-center justify-center gap-[6px]",
-        "rounded-md border",
-        "font-heading text-[14px] leading-[1.2] font-medium",
-        "transition-colors disabled:cursor-not-allowed disabled:opacity-45",
-        VARIANTS[variant],
-        className,
-      )}
+      className={buttonClass(variant, className)}
       {...rest}
     >
       {icon}
