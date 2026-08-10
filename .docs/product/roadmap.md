@@ -59,6 +59,22 @@ See [architecture/auth.md](../architecture/auth.md) and
 
 ---
 
+## Phase 1.6 — Landing page ✅ shipped
+
+The editor moved from `/` to `/tierlist`, and `/` became a newsfeed-style
+landing page: hero and CTA, featured cards, a chronological feed, announcements,
+quick links, footer. Server-rendered, with search and sort in the query string.
+
+Its posts are **sample content**, labelled as such on the page, because there is
+nothing to publish until Phase 4. `src/lib/feed.ts` holds the shape and the
+selection logic; a `feed.home` query replaces the array without touching a
+component. Two things from the design were deliberately dropped: like and save
+buttons (they need a `likes` table and a signed-in mutation — a toggle that only
+sets local state would misrepresent the product) and a "most ranked this week"
+card (aggregate tiers are on the never list below).
+
+---
+
 ## Phase 2 — Generalize the item model ⬜ next
 
 **Ship this before anything social.** It is a breaking change to the persisted

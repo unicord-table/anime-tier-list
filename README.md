@@ -27,6 +27,10 @@ shareable by link, with profiles and a feed. See
 - **Preview** what the public page will look like
 - **Sign in** with Google or GitHub — optional, and it doesn't gate anything yet
 
+Two routes: `/` is the landing page and `/tierlist` is the editor. The landing
+page's feed is sample content — it says so on the page — and stays that way
+until boards can be published.
+
 ## Getting started
 
 ```bash

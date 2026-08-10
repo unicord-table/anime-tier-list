@@ -79,13 +79,30 @@ Two things about this diagram are the whole architecture:
    deliberate call about rate limits, not an oversight — see
    [decisions.md D3](../decisions.md#d3).
 
-## The one route
+## The two routes
 
-`src/app/page.tsx` renders `TierListShell`, which mounts `TierListApp` through
-`next/dynamic` with `ssr: false`. There are no other routes, no route handlers,
-and no middleware. Reasoning is in [decisions.md D8](../decisions.md#d8).
+| Route | File | Rendering |
+| --- | --- | --- |
+| `/` | `src/app/page.tsx` | Server-rendered newsfeed landing page |
+| `/tierlist` | `src/app/tierlist/page.tsx` | `TierListShell` → `TierListApp`, `ssr: false` |
 
-That single route serves two views, toggled by React state (`BoardView` in
+`/tierlist` renders `TierListShell`, which mounts `TierListApp` through
+`next/dynamic` with `ssr: false` — reasoning in
+[decisions.md D8](../decisions.md#d8). There are still no route handlers and no
+middleware.
+
+**The editor used to be `/`.** It moved when the landing page took the root, and
+nothing redirects, because nothing 404s: `/` still resolves, now to the feed.
+Board permalinks are unaffected — there aren't any yet, and `/t/[slug]` in
+[sharing.md](sharing.md) is a separate namespace either way.
+
+The landing page keeps its state in the query string (`?q=`, `?sort=`) rather
+than in a client component, so search and sort are linkable, crawlable, and cost
+no JavaScript. Its data comes from `src/lib/feed.ts` — sample posts, labelled as
+such on the page, because publishing does not exist yet. `selectPosts` there is
+the seam a Convex `feed.home` query slots into.
+
+The editor route serves two views, toggled by React state (`BoardView` in
 `src/components/board/AppHeader.tsx`), not by navigation:
 
 - `editor` — the working board

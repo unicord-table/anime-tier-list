@@ -8,6 +8,12 @@ this yet" lines.
 > feeds — Never, probably; that's a different product."* That is reversed: it is
 > now the product. Recorded as [D12](../decisions.md#d12).
 
+> **The page exists; the feed does not.** `/` is a rendered landing page with a
+> feed layout, driven by sample posts in `src/lib/feed.ts` and labelled as
+> samples on screen. That is a shell, not a step in the order below — no
+> profiles, follows, likes, or comments were built, and nothing here is
+> unblocked by it. `selectPosts` is where the real query lands.
+
 ## Order of operations
 
 Do not build this before sharing works. A feed with nothing to link to is an

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { CloudCheck, Image as ImageIcon, ShareNetwork } from "@phosphor-icons/react";
 
 import { AccountMenu } from "@/components/auth/AccountMenu";
@@ -28,7 +29,10 @@ export function AppHeader({
 }) {
   return (
     <header className="flex h-[58px] flex-none items-center gap-[16px] border-b border-divider px-[16px]">
-      <Brand />
+      {/* The only way out of the editor and back to the feed. */}
+      <Link href="/" aria-label="Tierist home">
+        <Brand />
+      </Link>
 
       <div className="h-[26px] w-px bg-divider" />
 

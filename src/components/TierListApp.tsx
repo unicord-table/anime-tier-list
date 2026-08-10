@@ -61,7 +61,10 @@ export function TierListApp() {
   }
 
   return (
-    <div className="flex h-full flex-col bg-canvas text-ink">
+    // `overflow-hidden` is the editor's, not the document's: the board scrolls
+    // in its own container inside BoardEditor and the page must not. It sits
+    // here rather than on <body> so the landing page can scroll — see layout.tsx.
+    <div className="flex h-full flex-col overflow-hidden bg-canvas text-ink">
       {view === "editor" ? (
         <>
           <AppHeader

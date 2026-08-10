@@ -10,15 +10,28 @@ equivalent spine is four layers, and the rule that keeps it maintainable is that
 
 | Layer | Contents | May import |
 | --- | --- | --- |
-| **Route** | `src/app/page.tsx`, `layout.tsx` | Shell only |
+| **Route** | `src/app/page.tsx`, `tierlist/page.tsx`, `layout.tsx` | Shell only |
 | **Container** | `TierListShell`, `TierListApp`, `BoardEditor`, `CatalogPanel` | Anything below |
-| **Presentational** | `src/components/ui/`, `anime/`, `board/`, `auth/` | `lib/` types + helpers only |
-| **Domain / IO** | `src/lib/` — `board.ts`, `storage.ts`, `anilist.ts`, `types.ts` | Each other, nothing from `components/` |
+| **Presentational** | `src/components/ui/`, `anime/`, `board/`, `auth/`, `feed/` | `lib/` types + helpers only |
+| **Domain / IO** | `src/lib/` — `board.ts`, `feed.ts`, `storage.ts`, `anilist.ts`, `types.ts` | Each other, nothing from `components/` |
+
+The landing route is the one exception to "Route = shell only": `/` composes the
+feed sections itself and reads its data from `lib/feed.ts`. There is no
+container between them because there is no state to hold — search and sort live
+in the URL.
 
 `src/lib/board.ts` is the strictest case: it imports **types only**, all of them
 erased at compile time. That is what lets `node --test` run `board.test.ts`
 directly against it with no bundler and no test framework — see the file's own
 header comment. Adding a runtime import to `board.ts` breaks `npm test`.
+
+`lib/feed.ts` follows the same rule and is tested the same way. It does hold one
+runtime import — `TIER_PRESET_COLORS` from `board.ts`, so a preview board is
+coloured like a real one — which is why the specifier is `./board.ts`, extension
+included: Node's ESM loader will not resolve an extensionless relative path, and
+`allowImportingTsExtensions` in `tsconfig.json` is what lets the same specifier
+compile. Every other `lib/` import stays extensionless; only the chain a test
+walks needs this.
 
 ## Module map
 
