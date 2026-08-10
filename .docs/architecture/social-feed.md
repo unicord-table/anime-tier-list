@@ -8,11 +8,15 @@ this yet" lines.
 > feeds — Never, probably; that's a different product."* That is reversed: it is
 > now the product. Recorded as [D12](../decisions.md#d12).
 
-> **The page exists; the feed does not.** `/` is a rendered landing page with a
-> feed layout, driven by sample posts in `src/lib/feed.ts` and labelled as
-> samples on screen. That is a shell, not a step in the order below — no
-> profiles, follows, likes, or comments were built, and nothing here is
-> unblocked by it. `selectPosts` is where the real query lands.
+> **The feed is real, and it is only step 4's simplest half.** `/` renders
+> `tierlists.feed`: public boards, reverse-chronological, from the database.
+> There is no sample content anywhere in the app.
+>
+> What is still unbuilt is everything the order below is actually about —
+> profiles, follows, likes, comments. So the feed has no "following" tab, no
+> engagement counts, and no discovery beyond title search, because each of those
+> needs a table that does not exist. Adding a control that only sets local state
+> would be a claim about the product that isn't true.
 
 ## Order of operations
 
@@ -120,6 +124,12 @@ sequenceDiagram
     Q-->>U: feed page (live — Convex re-runs on any write)
 ```
 
+> **Today's `feed` is the cold-start case below, not this.** With no follows
+> table there is nothing to fan out over, so `tierlists.feed` is one indexed
+> read of public boards ordered `desc`. The diagram above is what it becomes
+> once follows exist; the query signature (`{ query?, limit? }` → summaries) is
+> already the shape a home/discovery split would keep.
+
 Assemble the feed by querying the follow edges and then recent lists per
 followed user. This is fan-out-on-read, and it is right to start with because:
 
@@ -160,32 +170,28 @@ reads.
 
 ## Authorization
 
-Today `convex/users.ts` says it plainly: `viewer` returns `null` because
-signed-out is a valid answer, and **anything that writes must throw on a null
-user id**. With one query that is a comment. With a dozen mutations it needs to
-be a shared helper:
+`convex/users.ts` says it plainly: `viewer` returns `null` because signed-out is
+a valid answer, and **anything that writes must throw on a null user id**. With
+one query that is a comment. With a dozen mutations it needs to be a shared
+helper — which is now **built**, as `convex/lib/auth.ts`:
 
 ```ts
-// convex/lib/auth.ts (Planned)
-export async function requireUser(ctx: MutationCtx) {
-  const userId = await getAuthUserId(ctx);
-  if (userId === null) throw new ConvexError("Not signed in");
-  return userId;
-}
-
-export async function requireOwner(ctx: MutationCtx, tierlistId: Id<"tierlists">) {
-  const userId = await requireUser(ctx);
-  const list = await ctx.db.get(tierlistId);
-  if (!list || list.ownerId !== userId) throw new ConvexError("Not yours");
-  return { userId, list };
-}
+requireUser(ctx)                 // -> Id<"users">, throws ConvexError otherwise
+requireOwnedBoard(ctx, id)       // -> { userId, board }, same error either way
 ```
 
 Every mutation starts with one of these. A per-function reimplementation is how
 an authorization hole gets in.
 
-Anonymous publish is the deliberate exception, and it authorizes on the edit
-token instead — see [sharing.md](sharing.md#ownership-two-models-both-required).
+Two details worth keeping when this grows:
+
+- `requireOwnedBoard` throws the **same** message for "no such board" and "not
+  yours". Distinguishing them turns the id space into an existence oracle.
+- The user id is always derived from the request identity, never taken as an
+  argument. An argument is something the caller chooses.
+
+There is no anonymous-publish exception any more — see
+[D15](../decisions.md#d15).
 
 ## Moderation
 

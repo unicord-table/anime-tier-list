@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {
-  DownloadSimple,
+  Cards,
   Megaphone,
   PlusCircle,
   Ranking,
@@ -10,10 +10,10 @@ import {
 import { buttonClass } from "@/components/ui/Button";
 import { Tag } from "@/components/ui/Tag";
 import { Text } from "@/components/ui/Text";
-import { ANNOUNCEMENTS, TIERLIST_ROUTE } from "@/lib/feed";
+import { ANNOUNCEMENTS, MY_BOARDS_ROUTE, TIERLIST_ROUTE } from "@/lib/feed";
 
 /**
- * Announcements, quick links, and the seasonal CTA.
+ * Announcements, quick links, and the CTA.
  *
  * The design also carried a "most ranked this week" card. It is deliberately
  * not here: aggregating everyone's tiers into an average is on the
@@ -25,8 +25,8 @@ const PANEL = "rounded-[12px] bg-surface p-[16px] shadow-sm";
 
 const QUICK_LINKS = [
   { label: "New tier list", href: TIERLIST_ROUTE, icon: PlusCircle },
-  { label: "Browse all lists", href: "/#browse", icon: SquaresFour },
-  { label: "Import from AniList", href: TIERLIST_ROUTE, icon: DownloadSimple },
+  { label: "My tier lists", href: MY_BOARDS_ROUTE, icon: Cards },
+  { label: "Recently published", href: "/#browse", icon: SquaresFour },
 ];
 
 export function FeedSidebar() {
@@ -80,11 +80,11 @@ export function FeedSidebar() {
 
       <section className="rounded-[12px] bg-[linear-gradient(160deg,color-mix(in_srgb,var(--color-accent)_16%,var(--color-surface)),var(--color-surface))] p-[16px] shadow-[0_0_0_1px_var(--color-accent-800)]">
         <Text variant="ui" className="mb-[5px] block font-semibold tracking-[-0.01em]">
-          Ranking the season?
+          Got a ranking in you?
         </Text>
         <Text as="p" variant="label" tone="subtle" className="mb-[13px] block leading-[1.5]">
-          Start an empty board and pull the airing titles in from AniList — the
-          catalog opens on trending, so the pool is never blank.
+          Start an empty board and pull titles in from AniList — the catalog
+          opens on trending, so the pool is never blank.
         </Text>
         <Link href={TIERLIST_ROUTE} className={buttonClass("primary", "w-full gap-[7px]")}>
           <Ranking size={16} />

@@ -79,28 +79,40 @@ Two things about this diagram are the whole architecture:
    deliberate call about rate limits, not an oversight — see
    [decisions.md D3](../decisions.md#d3).
 
-## The two routes
+## The routes
 
-| Route | File | Rendering |
-| --- | --- | --- |
-| `/` | `src/app/page.tsx` | Server-rendered newsfeed landing page |
-| `/tierlist` | `src/app/tierlist/page.tsx` | `TierListShell` → `TierListApp`, `ssr: false` |
+| Route | File | Rendering | Data |
+| --- | --- | --- | --- |
+| `/` | `src/app/page.tsx` | Server component | `tierlists.feed`, read anonymously |
+| `/t/[slug]` | `src/app/t/[slug]/page.tsx` | Server component | `tierlists.bySlug`, one read |
+| `/tierlists` | `src/app/tierlists/page.tsx` | Shell + client `MyBoards` | `tierlists.mine`, paginated |
+| `/tierlist` | `src/app/tierlist/page.tsx` | `TierListShell`, `ssr: false` | localStorage |
 
-`/tierlist` renders `TierListShell`, which mounts `TierListApp` through
-`next/dynamic` with `ssr: false` — reasoning in
-[decisions.md D8](../decisions.md#d8). There are still no route handlers and no
+The editor is still mounted with `ssr: false` — reasoning in
+[decisions.md D8](../decisions.md#d8). There are no route handlers and no
 middleware.
 
 **The editor used to be `/`.** It moved when the landing page took the root, and
 nothing redirects, because nothing 404s: `/` still resolves, now to the feed.
-Board permalinks are unaffected — there aren't any yet, and `/t/[slug]` in
-[sharing.md](sharing.md) is a separate namespace either way.
+Published boards live under `/t/`, a separate namespace, so a permalink is
+unaffected by anything that happens to the app routes.
 
-The landing page keeps its state in the query string (`?q=`, `?sort=`) rather
-than in a client component, so search and sort are linkable, crawlable, and cost
-no JavaScript. Its data comes from `src/lib/feed.ts` — sample posts, labelled as
-such on the page, because publishing does not exist yet. `selectPosts` there is
-the seam a Convex `feed.home` query slots into.
+### Server reads without the auth migration
+
+The two server-rendered routes read Convex through `src/lib/convex-server.ts`,
+which attaches **no auth token**. That is what keeps
+[D11](../decisions.md#d11)'s `@convex-dev/auth/react` choice intact: nothing
+server-rendered depends on who is asking. Anything viewer-specific — the
+listing page, the publish dialog, the "is this mine" check — is a client
+component with the session in the browser.
+
+The same module absorbs two failure modes on purpose: `NEXT_PUBLIC_CONVEX_URL`
+may be unset (a clone with no backend still renders), and a backend hiccup
+returns null rather than 500ing the landing page.
+
+`/` keeps its search term in the query string (`?q=`) rather than in client
+state, so the feed is linkable and crawlable and costs no JavaScript. The query
+runs against the `tierlists` title search index.
 
 The editor route serves two views, toggled by React state (`BoardView` in
 `src/components/board/AppHeader.tsx`), not by navigation:

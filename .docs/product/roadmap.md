@@ -62,16 +62,41 @@ See [architecture/auth.md](../architecture/auth.md) and
 ## Phase 1.6 — Landing page ✅ shipped
 
 The editor moved from `/` to `/tierlist`, and `/` became a newsfeed-style
-landing page: hero and CTA, featured cards, a chronological feed, announcements,
-quick links, footer. Server-rendered, with search and sort in the query string.
+landing page: hero and CTA, a chronological feed, announcements, quick links,
+footer. Server-rendered, with the search term in the query string.
 
-Its posts are **sample content**, labelled as such on the page, because there is
-nothing to publish until Phase 4. `src/lib/feed.ts` holds the shape and the
-selection logic; a `feed.home` query replaces the array without touching a
-component. Two things from the design were deliberately dropped: like and save
-buttons (they need a `likes` table and a signed-in mutation — a toggle that only
-sets local state would misrepresent the product) and a "most ranked this week"
-card (aggregate tiers are on the never list below).
+> Shipped first with labelled sample posts, then rewired onto real published
+> boards in Phase 4 below. There is no sample content in the app now.
+
+Two things from the design were deliberately dropped and stay dropped: like and
+save buttons (they need a `likes` table and a signed-in mutation — a toggle that
+only sets local state would misrepresent the product) and a "most ranked this
+week" card (aggregate tiers are on the never list below). The featured strip
+went too: featuring needs someone to do the featuring.
+
+---
+
+## Phase 4 — Share links ✅ shipped (out of order)
+
+**Shipped before Phase 2**, which is the one thing
+[D14](../decisions.md#d14) said not to do. The consequence is recorded as
+[D16](../decisions.md#d16): published documents now have to be backfilled when
+`schema: 2` lands, instead of the migration being a pure client-side function.
+
+- `tierlists` table; `publish` / `update` / `remove` / `bySlug` / `mine` / `feed`
+- `/t/[slug]` server-rendered, one read, zero catalog API calls
+- **Remix** — open a shared board as your own copy
+- `/tierlists`, the owner's paginated listing, with copy-link / edit / delete
+- Publish dialog in the editor: title, description, visibility
+- Caps, text sanitisation and the image allowlist, shared by client and server
+
+Not built, with triggers in
+[sharing.md](../architecture/sharing.md#still-missing): OpenGraph images, a
+`reports` table, per-account rate limiting. Anonymous publish was dropped
+outright — [D15](../decisions.md#d15).
+
+**Done when** a link opens in a private window on someone else's machine, with
+the publisher signed out. It does. It does not yet unfurl with an image.
 
 ---
 
@@ -80,6 +105,12 @@ card (aggregate tiers are on the never list below).
 **Ship this before anything social.** It is a breaking change to the persisted
 shape, and every board published in a later phase would otherwise need migrating
 in place on the server.
+
+> **That "otherwise" already happened.** Phase 4 shipped first, so there are
+> published documents. This phase now also needs a `@convex-dev/migrations`
+> backfill over `tierlists.data`, rehearsed against a snapshot before it touches
+> production, with `migrate()` running on read during the rollout so no link
+> breaks mid-deploy. See [D16](../decisions.md#d16).
 
 1. `schema: 1` → `schema: 2`. `Media` → `Item`, `media` → `items`,
    `cover` → `image`, `format` → `meta.kind`, `idMal` → `externalIds.mal`,
@@ -107,34 +138,27 @@ See [architecture/catalog-sources.md](../architecture/catalog-sources.md).
 
 ---
 
-## Phase 4 — Share links ⬜
+## Phase 4 — Share links
 
-The first phase that needs a server. Convex, not Postgres — see
-[decisions.md D4](../decisions.md#d4).
-
-- `tierlists` table; `publish` / `update` / `get` mutations and query
-- `/t/[slug]` server-rendered, one read, zero catalog API calls
-- Anonymous publish with an edit token **and** owned publish, both
-- **Remix** — open a shared board as your own copy. Not optional
-- OpenGraph image generated on publish
-- Every abuse control in
-  [sharing.md](../architecture/sharing.md#abuse-controls--non-negotiable-for-this-phase),
-  shipped with the phase, not after
-
-Decide the `@convex-dev/auth` `/react` → `/nextjs` question **before** building
-`/t/[slug]` — see [decisions.md D11](../decisions.md#d11).
-
-**Done when:** a link opens correctly in a private window on someone else's
-machine, with the publisher signed out, and unfurls with an image in a chat app.
+Shipped ahead of Phases 2 and 3 — written up above, next to Phase 1.6, since
+that is where it lands in time. The `@convex-dev/auth` `/react` → `/nextjs`
+question it was supposed to force was answered by not needing it: the
+server-rendered routes read anonymously ([D11](../decisions.md#d11)).
 
 ---
 
 ## Phase 5 — Profiles and identity ⬜
 
 `profiles` table, handle chosen at first publish, `/u/[handle]` listing someone's
-public boards, claim-an-anonymous-list flow.
+public boards.
 
-**Done when:** "here's everything I've ranked" is one URL.
+> `/tierlists` already answers "here's everything **I've** ranked" for the
+> signed-in user. What is missing is the public, addressable version of it, and
+> a handle to hang it on — right now a board's author is a display name with no
+> page behind it. The claim-an-anonymous-list flow is gone with
+> [D15](../decisions.md#d15).
+
+**Done when:** "here's everything I've ranked" is one URL someone else can open.
 
 ---
 

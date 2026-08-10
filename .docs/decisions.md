@@ -25,7 +25,9 @@ number, link it from wherever it's relevant.
 | [D11](#d11) | Convex Auth `/react`, not `/nextjs` | Active — trigger fires in the sharing phase |
 | [D12](#d12) | The product is a social platform | Active — supersedes "feeds: never" |
 | [D13](#d13) | Convex as the application database | Active — supersedes the Postgres plan and [D7](#d7) |
-| [D14](#d14) | Generalize the item model before building social | Active |
+| [D14](#d14) | Generalize the item model before building social | **Not followed — see [D16](#d16)** |
+| [D15](#d15) | Publishing requires an account | Active — supersedes anonymous publish + edit tokens |
+| [D16](#d16) | Share links shipped on `schema: 1` | Active — accepts a server-side backfill D14 wanted to avoid |
 
 ---
 
@@ -367,3 +369,69 @@ migrating live published data later.
 
 Migration table and the `custom` source that proves the abstraction:
 [catalog-sources.md](architecture/catalog-sources.md).
+
+---
+
+## D15 — Publishing requires an account
+
+**Decided 2026-08-10.** Supersedes the anonymous-publish + `editTokenHash` model
+specced in [sharing.md](architecture/sharing.md#ownership-two-models-both-required).
+
+A published board has exactly one owner model: `ownerId` pointing at a `users`
+row. `tierlists.publish` throws for a signed-out caller.
+
+The original argument for anonymous publishing was that requiring sign-in gates
+the product's core loop behind an account, against [D2](#d2). What changed the
+answer is that the loop being gated is *publishing*, not *building*: the editor
+still needs no account, still autosaves, still exports a PNG and a `.json`.
+Sign-in buys the thing the shipped feature is actually about — a board you can
+come back to, edit, and delete from `/tierlists`.
+
+What it costs, stated plainly:
+
+- **A first-time visitor cannot share without signing in.** That is a real
+  funnel step, and it is the reason to revisit this.
+- The `claim` flow (a signed-in user adopting an anonymous board by presenting
+  its token) does not exist, because there are no anonymous boards to claim.
+
+Two things fall out of it that are worth having on their own:
+
+- No `sha256(editToken)` handling, no `localStorage["atl:tokens"]`, no token
+  loss path.
+- Every write authorizes through `requireOwnedBoard` in `convex/lib/auth.ts`,
+  one code path, and the abuse surface for anonymous writes is closed rather
+  than defended.
+
+**Reconsider when** someone actually bounces off the sign-in step — or when
+share-per-visit matters more than owning what you shared. The schema change is
+additive (`ownerId` becomes optional, `editTokenHash` appears beside it), so
+this is not a one-way door.
+
+---
+
+## D16 — Share links shipped on `schema: 1`, before the item-model rename
+
+**Decided 2026-08-10. This does not follow [D14](#d14),** and the reason D14
+gave is now a cost that has to be paid rather than avoided.
+
+D14's argument was asymmetric cost: migrating boards in `localStorage` is a pure
+client-side function nobody notices, while migrating boards **already published
+on the server** means a backfill across stored documents with live links the
+whole time. Publishing shipped first, so the second is now the situation.
+
+What makes it survivable, and what it obliges:
+
+- Stored boards carry `schema: 1` explicitly and the payload is the same
+  portable JSON as a `.json` export ([D4](#d4)). `v1ToV2` is therefore one pure
+  function applied in two places rather than two migrations.
+- The backfill is a single pass over `tierlists.data` with
+  `@convex-dev/migrations`, and `tierlists.bySlug` can run `migrate()` on read
+  during the rollout so no link breaks mid-deploy.
+- **`prepareBoard` is the choke point.** Every write goes through it, so the
+  migration only has to handle documents written before the change — there is
+  no second ingest path to keep in step.
+
+**Obligation this creates:** Phase 2 is no longer invisible-to-users work that
+can ship whenever. It now needs a migration rehearsal against a snapshot before
+it touches production. Budget for that, and do not add a second published shape
+in the meantime.

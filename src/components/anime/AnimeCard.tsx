@@ -4,7 +4,7 @@ import type { CSSProperties, HTMLAttributes, Ref } from "react";
 import { Check } from "@phosphor-icons/react";
 import { Text } from "@/components/ui/Text";
 import { cn } from "@/lib/cn";
-import { retryCover } from "@/lib/img";
+import { coverGradient, retryCover } from "@/lib/img";
 import type { Media } from "@/lib/types";
 
 /**
@@ -20,12 +20,6 @@ const SIZES = {
 } as const;
 
 export type AnimeCardSize = keyof typeof SIZES;
-
-/** Seeds a readable gradient from AniList's dominant cover colour. */
-function placeholder(media: Media): string {
-  const base = media.color ?? "#3f424d";
-  return `linear-gradient(155deg, ${base}, color-mix(in srgb, ${base} 35%, #11121e))`;
-}
 
 type AnimeCardProps = {
   media: Media;
@@ -56,7 +50,7 @@ export function AnimeCard({
   return (
     <div
       ref={ref}
-      style={{ background: placeholder(media), ...style }}
+      style={{ background: coverGradient(media.color), ...style }}
       className={cn(
         "relative overflow-hidden select-none",
         "shadow-[0_0_0_1px_rgba(0,0,0,.45),0_3px_8px_rgba(0,0,0,.4)]",

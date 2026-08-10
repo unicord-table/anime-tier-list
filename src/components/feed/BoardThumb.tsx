@@ -1,21 +1,18 @@
 import { Text } from "@/components/ui/Text";
 import { cn } from "@/lib/cn";
-import type { ThumbRow } from "@/lib/feed";
+import { coverGradient } from "@/lib/img";
+import type { PreviewRow } from "@/lib/publish";
 
 /**
- * The miniature board that stands in for a tier list everywhere on the landing
- * page — hero, featured card, feed row. Decorative: every one of them sits next
- * to the board's real title, so it is hidden from assistive tech rather than
- * announced as a wall of unlabelled swatches.
+ * The miniature board on a feed or listing card, rendered from the `preview`
+ * denormalized onto the document at publish time — real tiers, real cover
+ * colours, no image requests and no second read.
+ *
+ * Decorative: it always sits next to the board's real title, so it is hidden
+ * from assistive tech rather than announced as a wall of unlabelled swatches.
  */
 
 const SIZES = {
-  lg: {
-    gap: "gap-[5px]",
-    label: "w-[26px] rounded-[5px]",
-    track: "flex min-w-0 flex-1 gap-[4px] rounded-[5px] bg-canvas p-[4px]",
-    cell: "h-[28px] w-[19px]",
-  },
   md: {
     gap: "gap-[5px]",
     label: "w-[24px] rounded-[5px]",
@@ -36,15 +33,15 @@ export function BoardThumb({
   size = "md",
   className,
 }: {
-  rows: ThumbRow[];
+  rows: readonly PreviewRow[];
   size?: keyof typeof SIZES;
   className?: string;
 }) {
   const s = SIZES[size];
   return (
     <div aria-hidden className={cn("flex flex-col", s.gap, className)}>
-      {rows.map((row) => (
-        <div key={row.label} className={cn("flex items-stretch", s.gap)}>
+      {rows.map((row, rowIndex) => (
+        <div key={rowIndex} className={cn("flex items-stretch", s.gap)}>
           <div
             className={cn("flex shrink-0 items-center justify-center", s.label)}
             style={{ background: row.color }}
@@ -54,11 +51,11 @@ export function BoardThumb({
             </Text>
           </div>
           <div className={s.track}>
-            {row.cells.map((gradient, i) => (
+            {row.swatches.map((color, i) => (
               <div
                 key={i}
                 className={cn("shrink-0 rounded-[3px]", s.cell)}
-                style={{ background: gradient }}
+                style={{ background: coverGradient(color) }}
               />
             ))}
           </div>

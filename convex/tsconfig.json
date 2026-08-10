@@ -11,6 +11,10 @@
     "jsx": "react-jsx",
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
+    /* tierlists.ts imports ../src/lib/publish.ts, whose own imports carry a
+       .ts extension so `node --test` can resolve them. Matches the root
+       tsconfig — see .docs/architecture/components.md. */
+    "allowImportingTsExtensions": true,
 
     /* These compiler options are required by Convex */
     "target": "ESNext",

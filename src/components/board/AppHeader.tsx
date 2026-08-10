@@ -1,14 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { CloudCheck, Image as ImageIcon, ShareNetwork } from "@phosphor-icons/react";
+import {
+  CloudCheck,
+  GlobeSimple,
+  Image as ImageIcon,
+  ShareNetwork,
+} from "@phosphor-icons/react";
 
 import { AccountMenu } from "@/components/auth/AccountMenu";
 import { Brand } from "@/components/ui/Brand";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonClass } from "@/components/ui/Button";
 import { Segmented } from "@/components/ui/Segmented";
 import { Text } from "@/components/ui/Text";
 import { TextInput } from "@/components/ui/TextInput";
+import { boardPath } from "@/lib/publish";
 
 export type BoardView = "editor" | "public";
 
@@ -19,6 +25,8 @@ export function AppHeader({
   onViewChange,
   onExportPng,
   onShare,
+  shareLabel = "Share",
+  publishedSlug = null,
 }: {
   title: string;
   onTitleChange: (title: string) => void;
@@ -26,6 +34,9 @@ export function AppHeader({
   onViewChange: (view: BoardView) => void;
   onExportPng: () => void;
   onShare: () => void;
+  /** "Update" once this board has been published from this session. */
+  shareLabel?: string;
+  publishedSlug?: string | null;
 }) {
   return (
     <header className="flex h-[58px] flex-none items-center gap-[16px] border-b border-divider px-[16px]">
@@ -62,6 +73,17 @@ export function AppHeader({
 
       <AccountMenu />
 
+      {publishedSlug ? (
+        <Link
+          href={boardPath(publishedSlug)}
+          target="_blank"
+          className={buttonClass("ghost", "gap-[6px]")}
+        >
+          <GlobeSimple size={16} />
+          View live
+        </Link>
+      ) : null}
+
       <Button
         variant="secondary"
         icon={<ImageIcon size={16} />}
@@ -74,7 +96,7 @@ export function AppHeader({
         icon={<ShareNetwork size={16} />}
         onClick={onShare}
       >
-        Share
+        {shareLabel}
       </Button>
     </header>
   );

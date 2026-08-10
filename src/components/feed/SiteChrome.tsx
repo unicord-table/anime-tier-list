@@ -5,7 +5,7 @@ import { AccountMenu } from "@/components/auth/AccountMenu";
 import { buttonClass } from "@/components/ui/Button";
 import { Text } from "@/components/ui/Text";
 import { TextInput } from "@/components/ui/TextInput";
-import { TIERLIST_ROUTE, type FeedSort } from "@/lib/feed";
+import { MY_BOARDS_ROUTE, TIERLIST_ROUTE } from "@/lib/feed";
 
 /**
  * Header and footer for the scrolling public pages. The editor keeps its own
@@ -19,7 +19,7 @@ import { TIERLIST_ROUTE, type FeedSort } from "@/lib/feed";
 const NAV_LINK =
   "border-b border-transparent py-[6px] text-neutral-400 transition-colors hover:border-accent hover:text-ink";
 
-export function SiteHeader({ query = "", sort }: { query?: string; sort?: FeedSort }) {
+export function SiteHeader({ query = "" }: { query?: string }) {
   return (
     <header className="sticky top-0 z-40 flex flex-wrap items-center gap-x-[22px] gap-y-[10px] border-b border-divider bg-[color-mix(in_srgb,var(--color-canvas)_88%,transparent)] px-[26px] py-[13px] backdrop-blur-[10px]">
       <Link href="/" className="flex items-center gap-[9px] text-ink">
@@ -37,9 +37,9 @@ export function SiteHeader({ query = "", sort }: { query?: string; sort?: FeedSo
             Feed
           </Text>
         </Link>
-        <Link href="/#browse" className={NAV_LINK}>
+        <Link href={MY_BOARDS_ROUTE} className={NAV_LINK}>
           <Text variant="uiSm" tone="inherit">
-            Browse
+            My tier lists
           </Text>
         </Link>
         <Link href="/#announcements" className={NAV_LINK}>
@@ -51,11 +51,9 @@ export function SiteHeader({ query = "", sort }: { query?: string; sort?: FeedSo
 
       <div className="flex-1" />
 
-      {/* GET to `/` — the page reads `q` off searchParams and filters server-side. */}
+      {/* GET to `/` — the page reads `q` off searchParams and the feed query
+          runs it through the tierlists title search index. */}
       <form action="/" role="search" className="relative w-full sm:w-[250px]">
-        {sort && sort !== "latest" ? (
-          <input type="hidden" name="sort" value={sort} />
-        ) : null}
         <MagnifyingGlass
           size={15}
           className="pointer-events-none absolute top-1/2 left-[10px] -translate-y-1/2 text-neutral-500"
@@ -65,8 +63,8 @@ export function SiteHeader({ query = "", sort }: { query?: string; sort?: FeedSo
           type="search"
           name="q"
           defaultValue={query}
-          aria-label="Search tier lists"
-          placeholder="Search lists, people, titles…"
+          aria-label="Search published tier lists"
+          placeholder="Search published tier lists…"
         />
       </form>
 
@@ -85,13 +83,13 @@ const FOOTER_GROUPS = [
     heading: "Make",
     links: [
       { label: "New tier list", href: TIERLIST_ROUTE },
-      { label: "Import from AniList", href: TIERLIST_ROUTE },
+      { label: "My tier lists", href: MY_BOARDS_ROUTE },
     ],
   },
   {
     heading: "Explore",
     links: [
-      { label: "Featured lists", href: "/#browse" },
+      { label: "Recently published", href: "/#browse" },
       { label: "Changelog", href: "/#announcements" },
     ],
   },
@@ -117,8 +115,8 @@ export function SiteFooter() {
             </Text>
           </div>
           <Text as="p" variant="label" tone="faint" className="block max-w-[34ch]">
-            Tier lists for anime, built in the browser. Boards stay on your device
-            until publishing ships.
+            Tier lists for anime, built in the browser. Boards stay on your
+            device until you publish one.
           </Text>
         </div>
 

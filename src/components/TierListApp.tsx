@@ -6,11 +6,28 @@ import { AnimeDetailModal } from "@/components/anime/AnimeDetailModal";
 import { AppHeader, type BoardView } from "@/components/board/AppHeader";
 import { BoardEditor } from "@/components/board/BoardEditor";
 import { PublicPreview } from "@/components/board/PublicPreview";
+import {
+  PublishDialog,
+  PublishedBoardLoader,
+  type PublishedBoard,
+} from "@/components/board/PublishDialog";
+import { convex } from "@/components/ConvexClientProvider";
 import { Toast } from "@/components/ui/Toast";
 import { downloadSaveFile, readSaveFile, slugify } from "@/lib/storage";
 import { useTierList } from "@/lib/useTierList";
 import { useToast } from "@/lib/useToast";
-import type { Media } from "@/lib/types";
+import type { Media, SaveFile } from "@/lib/types";
+
+/**
+ * `?board=<slug>` opens an already-published board. Read straight off
+ * `window` rather than through `useSearchParams`: this component is mounted
+ * with `ssr: false`, so there is no server render to Suspend, and the hook
+ * would push the whole route to dynamic rendering for one string.
+ */
+const slugFromUrl = (): string | null =>
+  typeof window === "undefined"
+    ? null
+    : new URLSearchParams(window.location.search).get("board");
 
 export function TierListApp() {
   const store = useTierList();
@@ -19,12 +36,39 @@ export function TierListApp() {
   const [view, setView] = useState<BoardView>("editor");
   const [detailMedia, setDetailMedia] = useState<Media | null>(null);
 
+  const [requestedSlug] = useState(slugFromUrl);
+  const [board, setBoard] = useState<PublishedBoard | null>(null);
+  const [publishOpen, setPublishOpen] = useState(false);
+
   const boardRef = useRef<HTMLDivElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const onError = useCallback((message: string) => show(message, "error"), [show]);
 
-  const { save } = store;
+  const { save, replace } = store;
+
+  const onBoardLoaded = useCallback(
+    (data: SaveFile, loaded: PublishedBoard | null) => {
+      // Goes through `replace`, so it lands on the undo stack — the same
+      // escape hatch "Load save file" already gives you.
+      replace(data);
+      setBoard(loaded);
+      show(
+        loaded
+          ? `Editing “${data.title}” — Share updates it`
+          : `Opened a copy of “${data.title}” — Share publishes it as yours`,
+      );
+    },
+    [replace, show],
+  );
+
+  function onShare() {
+    if (!convex) {
+      show("This deployment has no backend configured, so publishing is off", "error");
+      return;
+    }
+    setPublishOpen(true);
+  }
 
   async function exportPng() {
     if (!boardRef.current) return;
@@ -73,9 +117,9 @@ export function TierListApp() {
             view={view}
             onViewChange={setView}
             onExportPng={exportPng}
-            onShare={() =>
-              show("Publishing arrives in Phase 2 — export a PNG or .json for now")
-            }
+            onShare={onShare}
+            shareLabel={board ? "Update" : "Share"}
+            publishedSlug={board?.slug ?? null}
           />
           <BoardEditor
             store={store}
@@ -123,6 +167,27 @@ export function TierListApp() {
           show(`${media.title} removed from the board`);
         }}
       />
+
+      {convex && requestedSlug ? (
+        <PublishedBoardLoader
+          slug={requestedSlug}
+          onLoad={onBoardLoaded}
+          onError={onError}
+        />
+      ) : null}
+
+      {convex ? (
+        <PublishDialog
+          open={publishOpen}
+          onClose={() => setPublishOpen(false)}
+          save={save}
+          board={board}
+          onPublished={(published) => {
+            setBoard(published);
+            show(board ? "Board updated" : "Board published");
+          }}
+        />
+      ) : null}
 
       {toast ? <Toast message={toast.message} tone={toast.tone} /> : null}
     </div>

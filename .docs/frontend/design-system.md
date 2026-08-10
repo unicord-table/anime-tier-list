@@ -67,7 +67,9 @@ the `--font-inter` CSS variable.
 | `Button` | Text actions — `primary` / `secondary` / `ghost`, plus `social`, the taller filled OAuth button in the sign-in modal. Exports `buttonClass` for the `<Link>`s that need the same skin — an anchor cannot be a `<button>`, and nesting them is invalid |
 | `IconButton` | Icon-only actions — the tool rail, tier controls |
 | `TextInput` | Board title, tier label, search, import handle. The `search` variant owns its own left padding so a leading icon fits — see the `cn`-does-not-merge warning above |
-| `BoardThumb` | `components/feed/` — the miniature board on every feed card. Decorative, `aria-hidden`; three sizes |
+| `BoardThumb` | `components/feed/` — the miniature board on a feed or listing card, drawn from the stored `preview`. Decorative, `aria-hidden`; two sizes |
+| `BoardCard` | `components/feed/` — one published board, with an `actions` slot the owner's listing fills |
+| `ReadOnlyBoard` | `components/board/` — a board with no editor attached. No `"use client"`, so it compiles server-side on `/t/[slug]` and client-side inside `PublicPreview` |
 | `Segmented` | Catalog's search/import tab switch |
 | `Modal` | Detail modal, sign-in modal |
 | `Tag` | Genre chips in the detail modal |
