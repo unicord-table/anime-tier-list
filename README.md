@@ -1,12 +1,13 @@
-# Tierist — anime tier list
+# Unicord — anime tier list
 
 Build, save, and share anime tier lists. Search the AniList catalog or import a
 public list by username, drag titles into tiers, click any cover for details, and
 export a save file or a PNG.
 
-**Status:** the editor works end to end, entirely client-side, with optional
-Google/GitHub sign-in that currently gates nothing. Share links, non-anime
-topics, and the social layer are designed but not built — see
+**Status:** the editor works end to end and still runs entirely client-side, with
+no account needed to build a board. Publishing works too: sign in, and a board
+gets a permanent link and a home on the feed. Profiles, follows, likes and
+comments are designed but not built — see
 [`.docs/product/roadmap.md`](.docs/product/roadmap.md).
 
 **Where this is going:** a social platform for tier lists on any topic —
@@ -25,7 +26,18 @@ shareable by link, with profiles and a feed. See
 - **Autosave** to localStorage, plus export/import of a `.json` save file
 - **Export PNG** of the whole board
 - **Preview** what the public page will look like
-- **Sign in** with Google or GitHub — optional, and it doesn't gate anything yet
+- **Sign in** with Google or GitHub — optional; publishing is the one thing that needs it
+- **Publish** a board with a title and description, and get a permanent link
+- **Share** it public (in the feed), unlisted (link only), or private (just you)
+- **Remix** anyone's published board into your own editor
+- **Manage** everything you've published at `/tierlists` — copy link, edit, delete
+
+| Route | What |
+| --- | --- |
+| `/` | The feed — recently published public boards |
+| `/tierlist` | The editor. `?board=<slug>` opens a published one |
+| `/tierlists` | Your published boards |
+| `/t/<slug>` | A published board, read-only |
 
 ## Getting started
 
@@ -37,21 +49,24 @@ npm install
 npm run dev
 ```
 
-That's the whole setup. Sign-in needs a Convex deployment on top, and without one
-the app simply hides the account UI — see [`.docs/architecture/auth.md`](.docs/architecture/auth.md).
+`npm run dev` starts Next **and** `convex dev` together, so whichever deployment
+`.env.local` points at gets the functions in `convex/` pushed to it before you
+use them. Switching deployments needs no extra step.
 
-```bash
-npx convex dev
-```
+Without a Convex deployment configured, run `npm run dev:next` on its own: the
+editor works unchanged, the account UI hides itself, and the feed renders its
+empty state — see [`.docs/architecture/auth.md`](.docs/architecture/auth.md).
 
 | Command | What it does |
 | --- | --- |
-| `npm run dev` | Dev server on http://localhost:3000 |
-| `npm run build` | Production build |
-| `npm test` | Board logic tests (Node's runner, no framework) |
+| `npm run dev` | Next on http://localhost:3000 + `convex dev` watching `convex/` |
+| `npm run dev:next` | Next only — for working without a backend |
+| `npm run build` | Production build. Does **not** deploy Convex; Vercel's build command does |
+| `npm test` | Everything below |
+| `npm run test:lib` | Board, feed and publish logic (Node's runner, no framework) |
+| `npm run test:convex` | Convex functions against an in-memory database (`convex-test` + vitest) |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run lint` | ESLint |
-| `npx convex dev` | Convex backend, watching `convex/` — only needed for sign-in |
 
 ## Stack
 

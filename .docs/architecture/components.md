@@ -10,15 +10,51 @@ equivalent spine is four layers, and the rule that keeps it maintainable is that
 
 | Layer | Contents | May import |
 | --- | --- | --- |
-| **Route** | `src/app/page.tsx`, `layout.tsx` | Shell only |
-| **Container** | `TierListShell`, `TierListApp`, `BoardEditor`, `CatalogPanel` | Anything below |
-| **Presentational** | `src/components/ui/`, `anime/`, `board/`, `auth/` | `lib/` types + helpers only |
-| **Domain / IO** | `src/lib/` — `board.ts`, `storage.ts`, `anilist.ts`, `types.ts` | Each other, nothing from `components/` |
+| **Route** | `src/app/` — `page.tsx`, `t/[slug]/`, `tierlists/`, `tierlist/`, `layout.tsx` | Shell only |
+| **Container** | `TierListShell`, `TierListApp`, `BoardEditor`, `CatalogPanel`, `MyBoards` | Anything below |
+| **Presentational** | `src/components/ui/`, `anime/`, `board/`, `auth/`, `feed/` | `lib/` types + helpers only |
+| **Domain / IO** | `src/lib/` — `board.ts`, `publish.ts`, `feed.ts`, `storage.ts`, `anilist.ts`, `types.ts` | Each other, nothing from `components/` |
+| **Backend** | `convex/` — `tierlists.ts`, `users.ts`, `lib/auth.ts`, `schema.ts` | `src/lib/` pure modules, nothing from `components/` |
+
+The server-rendered routes are the exception to "Route = shell only": `/` and
+`/t/[slug]` fetch their own data and compose sections directly. There is no
+container between them because there is no state to hold — the search term
+lives in the URL, and everything else is read once and rendered.
+
+**`convex/` may import from `src/lib/`, never the reverse.** `tierlists.ts`
+imports `prepareBoard` so the caps and the sanitiser exist once rather than
+twice; client code reaches the other way only through `import type`, which is
+erased. That keeps `convex/_generated/server` out of the browser bundle.
 
 `src/lib/board.ts` is the strictest case: it imports **types only**, all of them
 erased at compile time. That is what lets `node --test` run `board.test.ts`
 directly against it with no bundler and no test framework — see the file's own
 header comment. Adding a runtime import to `board.ts` breaks `npm test`.
+
+`lib/publish.ts` follows the same rule and is tested the same way. Its one
+runtime import is `parseSaveFile` from `storage.ts`, which in turn imports
+`board.ts` — and that chain is why both carry a `./name.ts` specifier, extension
+included: Node's ESM loader will not resolve an extensionless relative path.
+`allowImportingTsExtensions` in both `tsconfig.json` and `convex/tsconfig.json`
+is what lets the same specifier compile. Every other `lib/` import stays
+extensionless; only the chain a test walks needs this.
+
+## Tests
+
+Two runners, because the two halves have different needs:
+
+| Command | Runner | Covers |
+| --- | --- | --- |
+| `npm run test:lib` | `node --test`, no framework | `src/lib/*.test.ts` — pure logic |
+| `npm run test:convex` | `vitest` + `convex-test` + `@edge-runtime/vm` | `convex/*.test.ts` — functions, against an in-memory database |
+| `npm test` | both | |
+
+The `node --test` half is deliberately runner-free and is why `lib/` modules
+stay import-pure. The Convex half cannot be: `convex-test` needs a real module
+graph (`import.meta.glob`) and an edge runtime. It is worth the two dev
+dependencies because it is the only way to exercise the authorization negatives
+— a stranger updating or deleting someone's board, a private board staying out
+of `bySlug` and the feed.
 
 ## Module map
 

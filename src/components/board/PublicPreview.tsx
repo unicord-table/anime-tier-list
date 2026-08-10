@@ -3,15 +3,15 @@
 import type { RefObject } from "react";
 import { GlobeSimple, PencilSimple, Ranking } from "@phosphor-icons/react";
 
-import { AnimeCard } from "@/components/anime/AnimeCard";
+import { ReadOnlyBoard } from "@/components/board/ReadOnlyBoard";
 import { Button } from "@/components/ui/Button";
 import { Heading, Text } from "@/components/ui/Text";
 import type { SaveFile } from "@/lib/types";
 
 /**
- * What the board looks like once shared. The URL pill is deliberately inert:
- * publishing is Phase 2, and showing a live-looking link (or a fabricated view
- * count, as the mock does) would imply a backend that does not exist yet.
+ * What the board looks like once shared, before it is shared. The URL pill is
+ * inert on purpose — this board has no slug until Publish mints one, and a
+ * live-looking link that 404s is worse than no link.
  */
 export function PublicPreview({
   save,
@@ -30,7 +30,7 @@ export function PublicPreview({
         <div className="flex items-center gap-[8px] rounded-[9px] border border-divider bg-surface px-[12px] py-[7px]">
           <GlobeSimple size={15} className="text-neutral-500" />
           <Text variant="uiSm" tone="faint" className="font-normal">
-            tierist.app/t/…
+            unicord.app/t/…
           </Text>
         </div>
         <Text variant="label" tone="muted">
@@ -55,40 +55,12 @@ export function PublicPreview({
             {rankedCount} titles ranked across {save.tiers.length} tiers
           </Text>
 
-          <div ref={boardRef} className="bg-canvas">
-            {save.tiers.map((tier) => (
-              <div
-                key={tier.id}
-                className="mb-[11px] flex rounded-[10px] shadow-[0_0_0_1px_var(--color-neutral-800)]"
-              >
-                <div
-                  style={{ background: tier.color }}
-                  className="flex w-[88px] min-h-[104px] flex-none items-center justify-center rounded-l-[10px] p-[8px]"
-                >
-                  <Text variant="tierLabelLg" tone="onTier">
-                    {tier.label}
-                  </Text>
-                </div>
-                <div className="flex min-w-0 flex-1 flex-wrap content-start gap-[9px] rounded-r-[10px] bg-surface p-[9px]">
-                  {tier.items
-                    .filter((key) => save.media[key])
-                    .map((key) => (
-                      <AnimeCard
-                        key={key}
-                        media={save.media[key]}
-                        size="public"
-                        interactive={false}
-                      />
-                    ))}
-                </div>
-              </div>
-            ))}
-          </div>
+          <ReadOnlyBoard save={save} ref={boardRef} />
 
           <div className="mt-[30px] flex items-center justify-center gap-[7px]">
             <Ranking weight="fill" size={15} className="text-accent-500" />
             <Text variant="label" tone="faint">
-              Made with Tierist
+              Made with Unicord
             </Text>
           </div>
         </div>

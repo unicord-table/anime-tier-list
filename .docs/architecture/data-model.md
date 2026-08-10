@@ -172,11 +172,43 @@ same PR.
 
 ---
 
-# Part 3 — Convex schema (Planned)
+# Part 3 — Convex schema (`tierlists` built, the rest Planned)
 
 Convex, not Postgres. The earlier plan specced a Postgres `tierlists` table;
 that predates the Convex deployment added in commit `e154bb7` and is superseded
 — see [decisions.md D4](../decisions.md#d4).
+
+**What exists in `convex/schema.ts` today** is `authTables` plus one table:
+
+```ts
+tierlists: {
+  ownerId, slug, title, description, visibility,
+  data,        // a whole SaveFile — see below
+  preview,     // [{ label, color, swatches[] }], the card thumbnail
+  itemCount, tierCount, updatedAt,
+}
+  .index("by_slug", ["slug"])          // /t/[slug], and the collision check
+  .index("by_owner", ["ownerId"])      // /tierlists
+  .index("by_visibility", ["visibility"])  // the feed
+  .searchIndex("search_title", { searchField: "title", filterFields: ["visibility"] })
+```
+
+Four differences from the diagram below, all deliberate:
+
+- **`ownerId` is required, not optional.** No anonymous publishing, no
+  `editTokenHash` — [D15](../decisions.md#d15).
+- **`preview` is denormalized on write.** A listing page renders dozens of
+  boards; deriving a thumbnail would mean shipping every `data` blob to the
+  client. `previewOf` stores cover *colours*, not URLs, so a card costs no image
+  requests and cannot poison the CORS cache the real covers share.
+- **`_creationTime` is `publishedAt`.** Convex appends it to every index, so
+  `by_visibility` ordered `desc` is "newest public boards first" with no
+  re-sort. A separate field would be a second thing to keep true.
+- **No `topic` field.** That belongs to `SaveFile` v2 (Part 2), which has not
+  shipped — see [D16](../decisions.md#d16) for what that now costs.
+
+Everything else in the diagram — `profiles`, `follows`, `likes`, `comments`,
+`feedEvents` — is still unbuilt.
 
 ```mermaid
 erDiagram
@@ -307,7 +339,7 @@ the answer is to cap published lists, not to raise the limit.
 | Key | Value | Status |
 | --- | --- | --- |
 | `atl:save` | current `SaveFile` | Built (`SAVE_KEY` in `storage.ts`) |
-| `atl:tokens` | `Record<slug, editToken>` | **Planned** — does not exist today |
+| `atl:tokens` | `Record<slug, editToken>` | **Dropped** — [D15](../decisions.md#d15) removed anonymous publishing, so there is no token to keep |
 
 Namespaced so another tool on the same origin can't collide. Keep the `atl:`
 prefix even after any rename.

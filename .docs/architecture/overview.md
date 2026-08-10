@@ -79,13 +79,43 @@ Two things about this diagram are the whole architecture:
    deliberate call about rate limits, not an oversight — see
    [decisions.md D3](../decisions.md#d3).
 
-## The one route
+## The routes
 
-`src/app/page.tsx` renders `TierListShell`, which mounts `TierListApp` through
-`next/dynamic` with `ssr: false`. There are no other routes, no route handlers,
-and no middleware. Reasoning is in [decisions.md D8](../decisions.md#d8).
+| Route | File | Rendering | Data |
+| --- | --- | --- | --- |
+| `/` | `src/app/page.tsx` | Server component | `tierlists.feed`, read anonymously |
+| `/t/[slug]` | `src/app/t/[slug]/page.tsx` | Server component | `tierlists.bySlug`, one read |
+| `/tierlists` | `src/app/tierlists/page.tsx` | Shell + client `MyBoards` | `tierlists.mine`, paginated |
+| `/tierlist` | `src/app/tierlist/page.tsx` | `TierListShell`, `ssr: false` | localStorage |
+| `/changelog` | `src/app/changelog/page.tsx` | Server component | `src/lib/changelog.ts`, static |
 
-That single route serves two views, toggled by React state (`BoardView` in
+The editor is still mounted with `ssr: false` — reasoning in
+[decisions.md D8](../decisions.md#d8). There are no route handlers and no
+middleware.
+
+**The editor used to be `/`.** It moved when the landing page took the root, and
+nothing redirects, because nothing 404s: `/` still resolves, now to the feed.
+Published boards live under `/t/`, a separate namespace, so a permalink is
+unaffected by anything that happens to the app routes.
+
+### Server reads without the auth migration
+
+The two server-rendered routes read Convex through `src/lib/convex-server.ts`,
+which attaches **no auth token**. That is what keeps
+[D11](../decisions.md#d11)'s `@convex-dev/auth/react` choice intact: nothing
+server-rendered depends on who is asking. Anything viewer-specific — the
+listing page, the publish dialog, the "is this mine" check — is a client
+component with the session in the browser.
+
+The same module absorbs two failure modes on purpose: `NEXT_PUBLIC_CONVEX_URL`
+may be unset (a clone with no backend still renders), and a backend hiccup
+returns null rather than 500ing the landing page.
+
+`/` keeps its search term in the query string (`?q=`) rather than in client
+state, so the feed is linkable and crawlable and costs no JavaScript. The query
+runs against the `tierlists` title search index.
+
+The editor route serves two views, toggled by React state (`BoardView` in
 `src/components/board/AppHeader.tsx`), not by navigation:
 
 - `editor` — the working board

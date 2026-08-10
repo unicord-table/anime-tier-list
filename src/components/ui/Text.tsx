@@ -5,12 +5,14 @@ import type { ElementType, ComponentPropsWithoutRef, ReactNode } from "react";
  * through here, so a size or colour change happens in one place instead of
  * across forty inline styles.
  *
- * Variants are drawn from the Nocturne scale plus the sizes the Tierist design
+ * Variants are drawn from the Nocturne scale plus the sizes the Unicord design
  * actually uses — nothing speculative. Add one here rather than reaching for a
  * raw `text-[13px]` in a component.
  */
 
 const VARIANTS = {
+  /** Landing-page headline. The only thing above `display`. */
+  hero: "font-heading text-[clamp(32px,6vw,46px)] font-medium leading-[1.06] tracking-[-0.025em]",
   /** Public tier-list title. */
   display: "font-heading text-[34px] font-medium leading-[1.12] tracking-[-0.015em]",
   /** Nocturne h3 — the heading inside a modal. */
@@ -21,12 +23,20 @@ const VARIANTS = {
   tierLabel: "font-heading text-[21px] font-bold leading-none tracking-[-0.01em]",
   /** Read-only tier letter on the public board. */
   tierLabelLg: "font-heading text-[23px] font-bold leading-none tracking-[-0.01em]",
+  /** Tier letter on a miniature board preview — one size for all three. */
+  tierLabelSm: "font-heading text-[11px] font-bold leading-none",
+  /** Feed and landing section headings — "Featured this week". */
+  sectionTitle: "font-heading text-[15px] font-medium leading-[1.2] tracking-[-0.01em]",
+  /** Landing-page counters. */
+  stat: "font-heading text-[22px] font-semibold leading-[1.2] tracking-[-0.02em]",
   /** Nocturne h6 — the uppercase panel heading. */
   eyebrow: "font-heading text-[13px] font-medium uppercase tracking-[0.08em] leading-[1.12]",
   /** "Results", "Unranked pool". */
   sectionLabel: "font-heading text-[12px] font-semibold tracking-[0.02em]",
   /** Default paragraph copy. */
   body: "font-body text-[15px] leading-[1.55]",
+  /** Card excerpts and announcement bodies — prose that sits inside a card. */
+  bodySm: "font-body text-[13px] leading-[1.55]",
   /** Buttons and inputs. */
   ui: "font-heading text-[14px] font-medium leading-[1.2]",
   /** Compact controls — tabs, segmented buttons. */
@@ -42,9 +52,12 @@ const VARIANTS = {
 const TONES = {
   default: "text-ink",
   muted: "text-muted",
+  bright: "text-neutral-200",
   subtle: "text-neutral-300",
   dim: "text-neutral-400",
   faint: "text-neutral-500",
+  /** Dimmest readable step — separators, view counts. */
+  ghost: "text-neutral-600",
   accent: "text-accent",
   accentSoft: "text-accent-200",
   /** On cover art, over the dark scrim. */
